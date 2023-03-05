@@ -164,10 +164,11 @@ int digit_index = 0;
 void aturJam(void)
 {
   int geser = 1;
-  EIFR |= (1<<INTF1);
-
-  if (PINC.5 == 0)
+   #asm("sei")
+  while(!(EIFR & (1 << INTF1))) {   //menunggu sampai interrupt ditekan
+  if (PINC.5 == 1)
   {
+    delay_ms(300);
     if (geser == 0){
       seconds++;
       if (seconds >= 60){
@@ -181,8 +182,9 @@ void aturJam(void)
       }      
     }
   }
-  else if (PINC.4  == 0)
-  {
+  else if (PINC.4  == 1)
+  {       
+    delay_ms(300);
     if (geser == 0){
       seconds--;
       if (seconds <= -1){
@@ -196,7 +198,8 @@ void aturJam(void)
       }
     }                                                         
   }
-  else if (PINC.3  == 0){
+  else if (PINC.3  == 1){
+   delay_ms(300);
     if (geser == 0){
         geser = 1;
     }            
@@ -208,30 +211,38 @@ void aturJam(void)
     digits[0] = minutes / 10;
     digits[1] = minutes % 10;
     digits[2] = seconds / 10;
-    digits[3] = seconds % 10;    
+    digits[3] = seconds % 10;
+    }
+      
+  // Clear the external interrupt flag
+  EIFR |= (1 << INTF1);
+
+  // Return from function
+  return;
+    
 }
 
 
 int mode = 0;
 // Externall Interrupt
 interrupt[EXT_INT1] void ext_int1_isr(void)
-{
+{                  //mode ...
   if (mode == 2){
     mode = 0;
-    TIMSK1 &= ~(1 << OCIE1A); //pause counter
+    TIMSK1 &= ~(1 << OCIE1A); 
   }
-  if (mode == 1)
-  {   
+  else if (mode == 1)
+  {              //mode tampilan
     mode = 2;
-    TIMSK1 |= (1 << OCIE1A);      
+    TIMSK1 |= (1 << OCIE1A);      //256
   }
-  if (mode == 0)
-  {  
+  else if (mode == 0)
+  {           //mode mengatur
     mode = 1;
     TIMSK1 &= ~(1 << OCIE1A);
     aturJam();
   }      
-  EIFR &= (0<<INTF1);
+  EIFR |= (1<<INTF1);
 
 }
 
