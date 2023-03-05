@@ -160,13 +160,15 @@ int minutes = 0;
 int digits[4] = {0, 0, 0, 0};
 int digit_index = 0;
 
-
+int atur = 1;
+int geser = 1;
 void aturJam(void)
 {
-  int geser = 1;
+   
    #asm("sei")
+   atur = 0;
   while(!(EIFR & (1 << INTF1))) {   //menunggu sampai interrupt ditekan
-  if (PINC.5 == 1)
+  if (BUTTON_D == 1)
   {
     delay_ms(300);
     if (geser == 0){
@@ -182,7 +184,7 @@ void aturJam(void)
       }      
     }
   }
-  else if (PINC.4  == 1)
+  else if (BUTTON_C  == 1)
   {       
     delay_ms(300);
     if (geser == 0){
@@ -198,7 +200,7 @@ void aturJam(void)
       }
     }                                                         
   }
-  else if (PINC.3  == 1){
+  else if (BUTTON_B  == 1){
    delay_ms(300);
     if (geser == 0){
         geser = 1;
@@ -213,7 +215,7 @@ void aturJam(void)
     digits[2] = seconds / 10;
     digits[3] = seconds % 10;
     }
-      
+  atur = 1;    
   // Clear the external interrupt flag
   EIFR |= (1 << INTF1);
 
@@ -223,25 +225,74 @@ void aturJam(void)
 }
 
 
-int mode = 0;
-// Externall Interrupt
-interrupt[EXT_INT1] void ext_int1_isr(void)
-{                  //mode ...
-  if (mode == 2){
-    mode = 0;
-    TIMSK1 &= ~(1 << OCIE1A); 
+int seconds_temp=0; //agar waktu jam tetap sama sebelum masuk mode stopwatch
+int minutes_temp=0;
+void stopWatch(void)
+{
+   #asm("sei")
+  seconds = 0;
+  minutes = 0;
+  
+  while(!(EIFR & (1 << INTF1))) {   //menunggu sampai interrupt ditekan
+  if (BUTTON_D == 1)
+  {
+    delay_ms(300);
+    TIMSK1 |= (1 << OCIE1A);
   }
-  else if (mode == 1)
-  {              //mode tampilan
-    mode = 2;
-    TIMSK1 |= (1 << OCIE1A);      //256
+  else if (BUTTON_C  == 1)
+  {       
+    delay_ms(300);
+    TIMSK1 &= ~(1 << OCIE1A);                                                        
+  }
+  else if (BUTTON_B  == 1){
+   delay_ms(300);
+   seconds = 0;
+   minutes = 0;
+  }
+    // Update Digit Values
+    digits[0] = minutes / 10;
+    digits[1] = minutes % 10;
+    digits[2] = seconds / 10;
+    digits[3] = seconds % 10;
+    }
+    
+ 
+  // Clear the external interrupt flag
+  EIFR |= (1 << INTF1);
+
+  // Return from function
+  return;
+    
+}
+
+int mode = 0;
+// External Interrupt
+interrupt[EXT_INT1] void ext_int1_isr(void)
+{      
+           
+  delay_ms (300); 
+  if (mode == 1){ //mode stopwatch
+    atur = 1;
+    mode = 0;
+    TIMSK1 &= ~(1 << OCIE1A);
+    seconds_temp = seconds;
+    minutes_temp = minutes;
+    stopWatch(); 
   }
   else if (mode == 0)
+  {              //mode tampilan
+    seconds += seconds_temp;
+    minutes += minutes_temp;
+    atur = 1;
+    mode = 1;
+    TIMSK1 |= (1 << OCIE1A);      //256
+  }
+  /*else if (mode == 0)
   {           //mode mengatur
     mode = 1;
     TIMSK1 &= ~(1 << OCIE1A);
     aturJam();
-  }      
+  }  */    
   EIFR |= (1<<INTF1);
 
 }
@@ -255,12 +306,12 @@ interrupt[TIM1_COMPA] void timera_compa_isr(void)
   // Check if 1 Minute has Passed
   if (seconds >= 60)
   {
-    seconds = 0;
+    seconds -= 60;
     minutes++;
   }
   if (minutes >= 60)
   {
-    minutes = 0;
+    minutes -= 60;
   }
 
   // Update Digit Values
@@ -279,6 +330,7 @@ interrupt[TIM0_OVF] void timer0_ovf_isr(void)
 
   // Enable Multiplexing for Current Digit
   // Elif for choose seven SevenSegmen
+  if (atur == 1)  {
   if (digit_index == 0)
   {
     DIGIT_1 = 1;
@@ -306,6 +358,64 @@ interrupt[TIM0_OVF] void timer0_ovf_isr(void)
     DIGIT_2 = 0;
     DIGIT_3 = 0;
     DIGIT_4 = 1;
+  } }
+  else {
+  if (digit_index == 0 && geser == 1)
+  {
+    DIGIT_1 = 1;
+    DIGIT_2 = 0;
+    DIGIT_3 = 0;
+    DIGIT_4 = 0;
+  }
+  else if (digit_index == 1 && geser == 1)
+  {
+    DIGIT_1 = 0;
+    DIGIT_2 = 1;
+    DIGIT_3 = 0;
+    DIGIT_4 = 0;
+  }
+    else if (digit_index == 2 && geser == 1)
+  {
+    DIGIT_1 = 0;
+    DIGIT_2 = 0;
+    DIGIT_3 = 0;
+    DIGIT_4 = 0;
+  }
+      else if (digit_index == 3 && geser == 1)
+  {
+    DIGIT_1 = 0;
+    DIGIT_2 = 0;
+    DIGIT_3 = 0;
+    DIGIT_4 = 0;
+  }
+  else  if (digit_index == 0 && geser == 0)
+  {
+    DIGIT_1 = 0;
+    DIGIT_2 = 0;
+    DIGIT_3 = 0;
+    DIGIT_4 = 0;
+  }
+  else if (digit_index == 1 && geser == 0)
+  {
+    DIGIT_1 = 0;
+    DIGIT_2 = 0;
+    DIGIT_3 = 0;
+    DIGIT_4 = 0;
+  }
+  else if (digit_index == 2 && geser == 0)
+  {
+    DIGIT_1 = 0;
+    DIGIT_2 = 0;
+    DIGIT_3 = 1;
+    DIGIT_4 = 0;
+  }
+  else if (digit_index == 3 && geser == 0)
+  {
+    DIGIT_1 = 0;
+    DIGIT_2 = 0;
+    DIGIT_3 = 0;
+    DIGIT_4 = 1;
+  }
   }
 
   // Increment Digit Index
@@ -338,7 +448,9 @@ void main(void)
   DDRC |= (1 << DDC0) | (1 << DDC1);
   DDRC &= ~(1 << DDD5) & ~(1 << DDD4) & ~(1 << DDD3);
   PORTD |= (1 << BUTTON_A) | (1 << BUTTON_B) | (1 << BUTTON_C) |(1 << BUTTON_D);
-
+  
+  TIMSK1 &= ~(1 << OCIE1A);
+  aturJam();
   while (1)
   {
   }
