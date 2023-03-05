@@ -16,30 +16,34 @@
 #define SEG_G PORTC.0
 #define SEG_DP PORTD.5
 #define BUTTON_A PIND.3
-#define BUTTON_B PIND.2
-#define BUTTON_C PIND.1
-#define BUTTON_D PIND.0
+#define BUTTON_B PINC.5
+#define BUTTON_C PINC.4
+#define BUTTON_D PINC.3
 
 void init_int1(void)
 {                                                    // 1s
-  TCCR1A = (1 << WGM12) | (1 << CS12) | (1 << CS10); // 1024 --> cs12 cs10
-  OCR1AH = 0x3D;
-  OCR1AL = 0x09;
+  TCCR1A = (1 << WGM12); // ctc 
+  TCCR1B = (1 << CS12);      //256
+  TCNT1H = 0;
+  TCNT1L = 0;
+  OCR1AH = 0xF4;
+  OCR1AL = 0x24;
+  TIMSK1 = 0b00000010;
 }
 
 void init_int2(void)
 {                                                    // 1ms
-  TCCR1B = (1 << WGM22) | (1 << CS22) | (1 << CS20); // prescaler 1024
-  OCR1BL = 1;
-  TIMSK1 = 0b00000110;
+  TIMSK0 = 0b00000001;
+  TCCR0B = (1 << CS02);    //256
+  TCNT0 = 0x3F;  
 }
 
 void init_buttonA(void)
 {
   // SET FALLING EDGE PADA INT1
-  EICRA |= (1 << ISC11);
+   EICRA = (1<<ISC11)|(0<<ISC10) |(0<<ISC01)|(0<<ISC00);
   // ENABLE INT1
-  EIMSK |= (1 << INT1);
+  EIMSK = (1 << INT1) | (0<<INT0);
 }
 
 // Define Seven Segment Segments
@@ -149,7 +153,6 @@ void SevenSegment(int num)
 }
 
 // Define Time Variables
-int seconds_60 = 0;
 int seconds = 0;
 int minutes = 0;
 
@@ -157,10 +160,13 @@ int minutes = 0;
 int digits[4] = {0, 0, 0, 0};
 int digit_index = 0;
 
-int geser = 0;
+
 void aturJam(void)
 {
-  if (BUTTON_B == 0)
+  int geser = 1;
+  EIFR |= (1<<INTF1);
+
+  if (PINC.5 == 0)
   {
     if (geser == 0){
       seconds++;
@@ -175,7 +181,8 @@ void aturJam(void)
       }      
     }
   }
-  else if (BUTTON_C == 0){
+  else if (PINC.4  == 0)
+  {
     if (geser == 0){
       seconds--;
       if (seconds <= -1){
@@ -187,11 +194,21 @@ void aturJam(void)
       if (minutes <= -1){
         minutes = 59;
       }
-    }   
+    }                                                         
   }
-  else if (BUTTON_D == 0){
-    geser = !geser;   
-  }  
+  else if (PINC.3  == 0){
+    if (geser == 0){
+        geser = 1;
+    }            
+    else{
+        geser = 0;
+    }
+  }
+    // Update Digit Values
+    digits[0] = minutes / 10;
+    digits[1] = minutes % 10;
+    digits[2] = seconds / 10;
+    digits[3] = seconds % 10;    
 }
 
 
@@ -199,29 +216,32 @@ int mode = 0;
 // Externall Interrupt
 interrupt[EXT_INT1] void ext_int1_isr(void)
 {
-  if (mode == 1)
-  {
+  if (mode == 2){
     mode = 0;
-    aturJam();
+    TIMSK1 &= ~(1 << OCIE1A); //pause counter
   }
-  else if (mode == 0)
-  {
+  if (mode == 1)
+  {   
+    mode = 2;
+    TIMSK1 |= (1 << OCIE1A);      
+  }
+  if (mode == 0)
+  {  
     mode = 1;
-  }
+    TIMSK1 &= ~(1 << OCIE1A);
+    aturJam();
+  }      
+  EIFR &= (0<<INTF1);
+
 }
 
 // Timer1 Compare Match A Interrupt
 interrupt[TIM1_COMPA] void timera_compa_isr(void)
 {
   // Check if 1 Second has Passed
-  seconds_60++;
+  seconds++;
 
   // Check if 1 Minute has Passed
-  if (seconds_60 >= 60)
-  {
-    seconds_60 = 0;
-    seconds++;
-  }
   if (seconds >= 60)
   {
     seconds = 0;
@@ -240,7 +260,7 @@ interrupt[TIM1_COMPA] void timera_compa_isr(void)
 }
 
 // Timer1 Compare Match B Interrupt
-interrupt[TIM1_COMPB] void timerb_compb_isr(void)
+interrupt[TIM0_OVF] void timer0_ovf_isr(void)
 {
 
   // Update Segment Values for Current Digit
@@ -293,6 +313,8 @@ void main(void)
 {
   // Initialize Timer1
   // set prescaler 1024
+  init_int1();
+  init_int2();
   init_buttonA();
 
   // Enable Interrupts
@@ -300,12 +322,11 @@ void main(void)
 
   // Set Seven Segment Pins as Output
   DDRB = 0b111111;
-  DDRD &= ~(1 << DDD2) & ~(1 << DDD3);
+  DDRD &= ~(1 << DDD3);
   DDRD |= (1 << DDD4) | (1 << DDD5) | (1 << DDD6) | (1 << DDD7);
   DDRC |= (1 << DDC0) | (1 << DDC1);
-
-  init_int1();
-  init_int2();
+  DDRC &= ~(1 << DDD5) & ~(1 << DDD4) & ~(1 << DDD3);
+  PORTD |= (1 << BUTTON_A) | (1 << BUTTON_B) | (1 << BUTTON_C) |(1 << BUTTON_D);
 
   while (1)
   {
