@@ -1,7 +1,12 @@
 RAM Allocation [bytes]
 Variable                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
-digits                                                                            0x0300       8
+minutes_stopwatch                                                                 0x0300       2
+digits                                                                            0x0302       8
+digit_index                                                                       0x030A       2
+atur                                                                              0x030C       2
+geser                                                                             0x030E       2
+start                                                                             0x0310       2
 
 EEPROM Allocation [bytes]
 Variable                                                                          Address   Size
@@ -10,17 +15,25 @@ Variable                                                                        
 Register Allocation
 Variable                                                                          Register  Size
 ------------------------------------------------------------------------------------------------
-seconds_60                                                                        R3,R4        2
-seconds                                                                           R5,R6        2
-minutes                                                                           R7,R8        2
-digit_index                                                                       R9,R10       2
+mode                                                                              R3,R4        2
+seconds_jam                                                                       R5,R6        2
+minutes_jam                                                                       R7,R8        2
+seconds_timer                                                                     R9,R10       2
+minutes_timer                                                                     R11,R12      2
+seconds_stopwatch                                                                 R13,R14      2
 
 FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
-init_int1                                                                         0x0006B     10
-init_int2                                                                         0x00075     13
-SevenSegment                                                                      0x00082    104
-timera_compa_isr                                                                  0x000EA     76
-timerb_compb_isr                                                                  0x00136     87
-main                                                                              0x0018D      9
+init_int1                                                                         0x00075     21
+init_int2                                                                         0x0008A      8
+init_buttonA                                                                      0x00092      6
+SevenSegment                                                                      0x00098    104
+aturJam                                                                           0x00100     92
+stopWatch                                                                         0x0015C     27
+alarmTimer                                                                        0x00177     86
+tampilanJam                                                                       0x001CD      7
+ext_int1_isr                                                                      0x001D4     38
+timera_compa_isr                                                                  0x001FA    143
+timer0_ovf_isr                                                                    0x00289    126
+main                                                                              0x00307     46

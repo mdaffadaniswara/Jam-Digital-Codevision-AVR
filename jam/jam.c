@@ -22,9 +22,9 @@
 #define PIN_BUZZ PORTD.2
 
 void init_int1(void)
-{                                                    // 1s
-  TCCR1A = (1 << WGM12); // ctc 
-  TCCR1B = (1 << CS12);      //256
+{                        // 1s
+  TCCR1A = (1 << WGM12); // ctc
+  TCCR1B = (1 << CS12);  // 256
   TCNT1H = 0;
   TCNT1L = 0;
   OCR1AH = 0xF4;
@@ -33,19 +33,18 @@ void init_int1(void)
 }
 
 void init_int2(void)
-{                                                    // 1ms
+{ // 1ms
   TIMSK0 = 0b00000001;
-  TCCR0B = (1 << CS02);    //256
-  TCNT0 = 0x83;  
+  TCCR0B = (1 << CS02); // 256
+  TCNT0 = 0x83;
 }
-
 
 void init_buttonA(void)
 {
   // SET FALLING EDGE PADA INT1
-   EICRA = (1<<ISC11)|(0<<ISC10) |(0<<ISC01)|(0<<ISC00);
+  EICRA = (1 << ISC11) | (0 << ISC10) | (0 << ISC01) | (0 << ISC00);
   // ENABLE INT1
-  EIMSK = (1 << INT1) | (0<<INT0);
+  EIMSK = (1 << INT1) | (0 << INT0);
 }
 
 // Define Seven Segment Segments
@@ -154,11 +153,15 @@ void SevenSegment(int num)
   }
 }
 
+int mode = 0;
+
 // Define Time Variables
-int seconds = 0;
-int minutes = 0;
-int seconds_1000 = 0;
-int minutes_1000 = 0;
+int seconds_jam = 0;
+int minutes_jam = 0;
+int seconds_timer = 0;
+int minutes_timer = 0;
+int seconds_stopwatch = 0;
+int minutes_stopwatch = 0;
 
 // Define Digit Variables
 int digits[4] = {0, 0, 0, 0};
@@ -168,367 +171,409 @@ int atur = 1;
 int geser = 1;
 void aturJam(void)
 {
-   
-   #asm("sei")
-   atur = 0;
-   TIMSK1 &= ~(1 << OCIE1A);
-  while(!(EIFR & (1 << INTF1))) {   //menunggu sampai interrupt ditekan
-  if (BUTTON_D == 1)
-  {
-    delay_ms(300);
-    if (geser == 0){
-      seconds++;
-      seconds_1000 = seconds*1000;
-      if (seconds >= 60){
-        seconds = 0;
-        seconds_1000 = seconds*1000;
+#asm("sei")
+  atur = 0;
+  TIMSK1 &= ~(1 << OCIE1A);
+  while (!(EIFR & (1 << INTF1)))
+  { // menunggu sampai interrupt ditekan
+    if (BUTTON_D == 1)
+    {
+      delay_ms(300);
+      if (geser == 0)
+      {
+        seconds_jam++;
+        if (seconds_jam >= 60)
+        {
+          seconds_jam = 0;
+        }
+      }
+      else
+      {
+        minutes_jam++;
+        if (minutes_jam >= 60)
+        {
+          minutes_jam = 0;
+        }
       }
     }
-    else{
-      minutes++;
-      minutes_1000 = minutes;
-      if (minutes >= 60){
-        minutes = 0;
-        minutes_1000 = minutes;
-      }      
-    }
-  }
-  else if (BUTTON_C  == 1)
-  {       
-    delay_ms(300);
-    if (geser == 0){
-      seconds--;
-      seconds_1000 = seconds*1000;      
-      if (seconds <= -1){
-        seconds = 59;
-        seconds_1000 = seconds*1000;
+    else if (BUTTON_C == 1)
+    {
+      delay_ms(300);
+      if (geser == 0)
+      {
+        seconds_jam--;
+        if (seconds_jam <= -1)
+        {
+          seconds_jam = 59;
+        }
+      }
+      else
+      {
+        minutes_jam--;
+        if (minutes_jam <= -1)
+        {
+          minutes_jam = 59;
+        }
       }
     }
-    else{
-      minutes--;
-      minutes_1000 = minutes;      
-      if (minutes <= -1){
-        minutes = 59;
-        minutes_1000 = minutes;
-      }
-    }                                                         
-  }
-  else if (BUTTON_B  == 1){
-   delay_ms(300);
-    if (geser == 0){
+    else if (BUTTON_B == 1)
+    {
+      delay_ms(300);
+      if (geser == 0)
+      {
         geser = 1;
-    }            
-    else{
+      }
+      else
+      {
         geser = 0;
+      }
     }
-  }
     // Update Digit Values
-    digits[0] = minutes / 10;
-    digits[1] = minutes % 10;
-    digits[2] = seconds / 10;
-    digits[3] = seconds % 10;
-    }
-  atur = 1;    
+    digits[0] = minutes_jam / 10;
+    digits[1] = minutes_jam % 10;
+    digits[2] = seconds_jam / 10;
+    digits[3] = seconds_jam % 10;
+  }
+  atur = 1;
   // Clear the external interrupt flag
   EIFR &= (0 << INTF1);
 
   // Return from function
   return;
-    
 }
 
 void stopWatch(void)
 {
-   #asm("sei")
-  seconds = 0;
-  minutes = 0;
+#asm("sei")
+  seconds_stopwatch = 0;
+  minutes_stopwatch = 0;
   TIMSK1 &= ~(1 << OCIE1A);
-  
-  while(!(EIFR & (1 << INTF1))) {   //menunggu sampai interrupt ditekan
-  if (BUTTON_D == 1)                      //start
-  {
-    delay_ms(300);
-    TIMSK1 |= (1 << OCIE1A);
-  }
-  else if (BUTTON_C  == 1)         //pause
-  {       
-    delay_ms(300);
-    TIMSK1 &= ~(1 << OCIE1A);                                                        
-  }                                              
-  else if (BUTTON_B  == 1){                      //pause and reset
-   delay_ms(300);
-   TIMSK1 &= ~(1 << OCIE1A);                                                        
-   seconds = 0;
-   minutes = 0;
-  }
-    // Update Digit Values
-    digits[0] = minutes / 10;
-    digits[1] = minutes % 10;
-    digits[2] = seconds / 10;
-    digits[3] = seconds % 10;
+
+  while (!(EIFR & (1 << INTF1)))
+  {                    // menunggu sampai interrupt ditekan
+    if (BUTTON_D == 1) // start
+    {
+      delay_ms(300);
+      TIMSK1 |= (1 << OCIE1A);
     }
-    
+    else if (BUTTON_C == 1) // pause
+    {
+      delay_ms(300);
+      TIMSK1 &= ~(1 << OCIE1A);
+    }
+    else if (BUTTON_B == 1)
+    { // pause and reset
+      delay_ms(300);
+      TIMSK1 &= ~(1 << OCIE1A);
+      seconds_stopwatch = 0;
+      minutes_stopwatch = 0;
+    }
+    // Update Digit Values
+    digits[0] = minutes_stopwatch / 10;
+    digits[1] = minutes_stopwatch % 10;
+    digits[2] = seconds_stopwatch / 10;
+    digits[3] = seconds_stopwatch % 10;
+  }
+
   // Clear the external interrupt flag
   EIFR &= (0 << INTF1);
 
   // Return from function
-  return;                                                            
+  return;
 }
 
-
-int timer = 0;
-void alarmTimer (void)
+int start = 0;
+void alarmTimer(void)
 {
-   #asm("sei")
-  timer = 1;
+#asm("sei")
+  start = 0;
   TIMSK1 &= ~(1 << OCIE1A);
-  seconds = 0;
-  minutes = 0;
-  while(!(EIFR & (1 << INTF1))) {   //menunggu sampai interrupt ditekan
-  if (BUTTON_D == 1)
-  {
-    delay_ms(300);
-    seconds++;
-    if (seconds >= 60){
-      seconds = 0;
+  seconds_timer = 0;
+  minutes_timer = 0;
+  while (!(EIFR & (1 << INTF1)))
+  { // menunggu sampai interrupt ditekan
+    if (BUTTON_D == 1)
+    {
+      delay_ms(300);
+      seconds_timer++;
+      if (seconds_timer >= 60)
+      {
+        seconds_timer = 0;
+      }
     }
-  }
-  else if (BUTTON_C  == 1)
-  {       
-    delay_ms(300);
-    minutes++;
-    if (minutes >= 60){
-      minutes = 0;
-    }                                                         
-  }
-  else if (BUTTON_B  == 1){
-    delay_ms(300);
-    TIMSK1 |= (1 << OCIE1A);
-  }
+    else if (BUTTON_C == 1)
+    {
+      delay_ms(300);
+      minutes_timer++;
+      if (minutes_timer >= 60)
+      {
+        minutes_timer = 0;
+      }
+    }
+    else if (BUTTON_B == 1)
+    {
+      delay_ms(300);
+      TIMSK1 |= (1 << OCIE1A);
+      start = 1;
+    }
     // Update Digit Values
-    digits[0] = minutes / 10;
-    digits[1] = minutes % 10;
-    digits[2] = seconds / 10;
-    digits[3] = seconds % 10;
-    if(minutes == 0 && seconds == 0){
-        PIN_BUZZ = 1;
+    digits[0] = minutes_timer / 10;
+    digits[1] = minutes_timer % 10;
+    digits[2] = seconds_timer / 10;
+    digits[3] = seconds_timer % 10;
+    if (minutes_timer == 0 && seconds_timer == 0 && start == 1)
+    {
+      PIN_BUZZ = 1;
     }
-    }
-    
-    timer = 0;
-    
+  }
   // Clear the external interrupt flag
   EIFR &= (0 << INTF1);
 
   // Return from function
-  return;                                                            
+  return;
 }
 
 void tampilanJam(void)
 {
-    #asm("sei")
-    TIMSK1 |= (1 << OCIE1A);      //256  
-  while(!(EIFR & (1 << INTF1))) {   //menunggu sampai interrupt ditekan
+#asm("sei")
+
+  while (!(EIFR & (1 << INTF1)))
+  { // menunggu sampai interrupt ditekan
   }
-    
+
   // Clear the external interrupt flag
   EIFR &= (0 << INTF1);
 
   // Return from function
-  return;                                                            
+  return;
 }
 
-int mode = 0;
 // External Interrupt
-interrupt[EXT_INT1] void ext_int1_isr(void)                                                                             
-{              
-  delay_ms (300); 
-  if (mode == 1){ //mode stopwatch
+interrupt[EXT_INT1] void ext_int1_isr(void)
+{
+  PIN_BUZZ = 0;
+  delay_ms(300);
+  if (mode == 1)
+  { // mode stopwatch
     atur = 1;
     mode = 2;
     TIMSK1 &= ~(1 << OCIE1A);
-    stopWatch(); 
+    stopWatch();
   }
-  delay_ms (300); 
-  if (mode == 0)
-  {              //mode tampilan
-    seconds = (seconds_1000)/1000;
-    minutes = minutes_1000;
-    timer = 0;
+  else if (mode == 0)
+  { // mode tampilan
     atur = 1;
     mode = 1;
-    TIMSK1 |= (1 << OCIE1A);      //256
+    TIMSK1 |= (1 << OCIE1A); // 256
     tampilanJam();
-  }                 
-  delay_ms (300);
-  if(mode == 2){
+  }
+  else if (mode == 2)
+  { // mode timer
     atur = 1;
-    timer = 1;
     mode = 0;
     TIMSK1 &= ~(1 << OCIE1A);
-    alarmTimer();  
+    alarmTimer();
   }
   /*else if (mode == 0)
   {           //mode mengatur
     mode = 1;
     TIMSK1 &= ~(1 << OCIE1A);
     aturJam();
-  }  */    
-
+  }  */
 }
 
 // Timer1 Compare Match A Interrupt
 interrupt[TIM1_COMPA] void timera_compa_isr(void)
 {
-  if (timer == 0){
-      // Check if 1 Second has Passed
-      seconds++;
+  if (mode == 1)
+  {
+    // Check if 1 Second has Passed
+    seconds_jam++;
 
-      // Check if 1 Minute has Passed
-      if (seconds >= 60)
-      {
-        seconds = 0;
-        minutes++;
-      }
-      if (minutes >= 60)
-      {
-        minutes = 00;
-      }
+    // Check if 1 Minute has Passed
+    if (seconds_jam >= 60)
+    {
+      seconds_jam = 0;
+      minutes_jam++;
+    }
+    if (minutes_jam >= 60)
+    {
+      minutes_jam = 0;
+    }
+    // Update Digit Values
+    digits[0] = minutes_jam / 10;
+    digits[1] = minutes_jam % 10;
+    digits[2] = seconds_jam / 10;
+    digits[3] = seconds_jam % 10;
   }
-  else{
-      // Check if 1 Second has Passed
-      seconds--;
+  else if(mode == 0)
+  {
+    // Check if 1 Second has Passed
+    seconds_timer--;
+    seconds_jam++;
 
-      // Check if 1 Minute has Passed
-      if(seconds == 0 && minutes == 0){ //timer sudah mencapai 0
-        TIMSK1 &= ~(1 << OCIE1A);    
-      }
-      if (seconds <= -1)
-      {
-        seconds = 59;
-        minutes--;
-      }
-      if (minutes <= -1)
-      {
-        minutes = 0;
-      }  
+    // Check if 1 Minute has Passed
+    if (seconds_jam >= 60)
+    {
+      seconds_jam = 0;
+      minutes_jam++;
+    }
+    if (minutes_jam >= 60)
+    {
+      minutes_jam = 0;
+    }
+
+    // Check if 1 Minute has Passed
+    if (seconds_timer == 0 && minutes_timer == 0)
+    { // timer sudah mencapai 0
+      TIMSK1 &= ~(1 << OCIE1A);
+    }
+    if (seconds_timer <= -1)
+    {
+      seconds_timer = 59;
+      minutes_timer--;
+    }
+    if (minutes_timer <= -1)
+    {
+      minutes_timer = 0;
+    }
+    // Update Digit Values
+    digits[0] = minutes_timer / 10;
+    digits[1] = minutes_timer % 10;
+    digits[2] = seconds_timer / 10;
+    digits[3] = seconds_timer % 10;
   }
+  else if (mode == 2)
+  {
+    // Check if 1 Second has Passed
+    seconds_stopwatch++;
+    seconds_jam++;
 
-  // Update Digit Values
-  digits[0] = minutes / 10;
-  digits[1] = minutes % 10;
-  digits[2] = seconds / 10;
-  digits[3] = seconds % 10;
+    // Check if 1 Minute has Passed
+    if (seconds_jam >= 60)
+    {
+      seconds_jam = 0;
+      minutes_jam++;
+    }
+    if (minutes_jam >= 60)
+    {
+      minutes_jam = 0;
+    }
+    // Check if 1 Minute has Passed
+    if (seconds_stopwatch >= 60)
+    {
+      seconds_stopwatch = 0;
+      minutes_stopwatch++;
+    }
+    if (minutes_stopwatch >= 60)
+    {
+      minutes_stopwatch = 00;
+    }
+    // Update Digit Values
+    digits[0] = minutes_stopwatch / 10;
+    digits[1] = minutes_stopwatch % 10;
+    digits[2] = seconds_stopwatch / 10;
+    digits[3] = seconds_stopwatch % 10;
+  }
 }
 
 // Timer0 Overflow Interrupt
 interrupt[TIM0_OVF] void timer0_ovf_isr(void)
 {
-  // Check if 1 Second has Passed
-  seconds_1000++;
-
-  // Check if 1 Minute has Passed
-  if (seconds_1000 >= 60000)
-  {
-    seconds_1000 -= 60000;
-    minutes_1000++;
-  }
-  if (minutes_1000 >= 60)
-  {
-    minutes_1000 -= 60;
-  }
-
   // Update Segment Values for Current Digit
   SevenSegment(digits[digit_index]);
 
   // Enable Multiplexing for Current Digit
   // Elif for choose seven SevenSegmen
-  if (atur == 1)  {
-  if (digit_index == 0)
+  if (atur == 1)
   {
-    DIGIT_1 = 1;
-    DIGIT_2 = 0;
-    DIGIT_3 = 0;
-    DIGIT_4 = 0;
+    if (digit_index == 0)
+    {
+      DIGIT_1 = 1;
+      DIGIT_2 = 0;
+      DIGIT_3 = 0;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 1)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 1;
+      DIGIT_3 = 0;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 2)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 0;
+      DIGIT_3 = 1;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 3)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 0;
+      DIGIT_3 = 0;
+      DIGIT_4 = 1;
+    }
   }
-  else if (digit_index == 1)
+  else
   {
-    DIGIT_1 = 0;
-    DIGIT_2 = 1;
-    DIGIT_3 = 0;
-    DIGIT_4 = 0;
-  }
-  else if (digit_index == 2)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 0;
-    DIGIT_3 = 1;
-    DIGIT_4 = 0;
-  }
-  else if (digit_index == 3)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 0;
-    DIGIT_3 = 0;
-    DIGIT_4 = 1;
-  } }
-  else {
-  if (digit_index == 0 && geser == 1)
-  {
-    DIGIT_1 = 1;
-    DIGIT_2 = 0;
-    DIGIT_3 = 0;
-    DIGIT_4 = 0;
-  }
-  else if (digit_index == 1 && geser == 1)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 1;
-    DIGIT_3 = 0;
-    DIGIT_4 = 0;
-  }
+    if (digit_index == 0 && geser == 1)
+    {
+      DIGIT_1 = 1;
+      DIGIT_2 = 0;
+      DIGIT_3 = 0;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 1 && geser == 1)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 1;
+      DIGIT_3 = 0;
+      DIGIT_4 = 0;
+    }
     else if (digit_index == 2 && geser == 1)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 0;
-    DIGIT_3 = 0;
-    DIGIT_4 = 0;
-  }
-      else if (digit_index == 3 && geser == 1)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 0;
-    DIGIT_3 = 0;
-    DIGIT_4 = 0;
-  }
-  else  if (digit_index == 0 && geser == 0)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 0;
-    DIGIT_3 = 0;
-    DIGIT_4 = 0;
-  }
-  else if (digit_index == 1 && geser == 0)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 0;
-    DIGIT_3 = 0;
-    DIGIT_4 = 0;
-  }
-  else if (digit_index == 2 && geser == 0)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 0;
-    DIGIT_3 = 1;
-    DIGIT_4 = 0;
-  }
-  else if (digit_index == 3 && geser == 0)
-  {
-    DIGIT_1 = 0;
-    DIGIT_2 = 0;
-    DIGIT_3 = 0;
-    DIGIT_4 = 1;
-  }
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 0;
+      DIGIT_3 = 0;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 3 && geser == 1)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 0;
+      DIGIT_3 = 0;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 0 && geser == 0)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 0;
+      DIGIT_3 = 0;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 1 && geser == 0)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 0;
+      DIGIT_3 = 0;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 2 && geser == 0)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 0;
+      DIGIT_3 = 1;
+      DIGIT_4 = 0;
+    }
+    else if (digit_index == 3 && geser == 0)
+    {
+      DIGIT_1 = 0;
+      DIGIT_2 = 0;
+      DIGIT_3 = 0;
+      DIGIT_4 = 1;
+    }
   }
 
   // Increment Digit Index
@@ -541,8 +586,6 @@ interrupt[TIM0_OVF] void timer0_ovf_isr(void)
   }
 }
 
-
-
 void main(void)
 {
   // Initialize Timer1
@@ -551,8 +594,8 @@ void main(void)
   init_int2();
   init_buttonA();
 
-  // Enable Interrupts
-  #asm("sei")
+// Enable Interrupts
+#asm("sei")
 
   // Set Seven Segment Pins as Output
   DDRB = 0b111111;
@@ -560,9 +603,10 @@ void main(void)
   DDRD |= (1 << DDD2) | (1 << DDD4) | (1 << DDD5) | (1 << DDD6) | (1 << DDD7);
   DDRC |= (1 << DDC0) | (1 << DDC1);
   DDRC &= ~(1 << DDD5) & ~(1 << DDD4) & ~(1 << DDD3);
-  PORTD |= (1 << BUTTON_A) | (1 << BUTTON_B) | (1 << BUTTON_C) |(1 << BUTTON_D);
-  
+  PORTD |= (1 << BUTTON_A) | (1 << BUTTON_B) | (1 << BUTTON_C) | (1 << BUTTON_D);
+
   TIMSK1 &= ~(1 << OCIE1A);
+  mode = 0;
   aturJam();
   while (1)
   {
