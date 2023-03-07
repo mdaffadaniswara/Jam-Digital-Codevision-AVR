@@ -64,21 +64,22 @@ interrupt[EXT_INT1] void ext_int1_isr(void)
   { // mode stopwatch
     atur = 1;
     mode = 2;
-    TIMSK1 &= ~(1 << OCIE1A);
+    start = 0;
     stopWatch();
   }
   else if (mode == 0)
   { // mode tampilan
     atur = 1;
     mode = 1;
-    TIMSK1 |= (1 << OCIE1A); // 256
+    start = 1;
+    TIMSK1 |= (1 << OCIE1A);
     tampilanJam();
   }
   else if (mode == 2)
   { // mode timer
     atur = 1;
     mode = 0;
-    TIMSK1 &= ~(1 << OCIE1A);
+    start = 0; 
     alarmTimer();
   }
   /*else if (mode == 0)
@@ -91,7 +92,8 @@ interrupt[EXT_INT1] void ext_int1_isr(void)
 
 // Timer1 Compare Match A Interrupt
 interrupt[TIM1_COMPA] void timera_compa_isr(void)
-{
+{ 
+  if (start == 1){
   if (mode == 1)
   {
     // Check if 1 Second has Passed
@@ -133,7 +135,8 @@ interrupt[TIM1_COMPA] void timera_compa_isr(void)
     // Check if 1 Minute has Passed
     if (seconds_timer == 0 && minutes_timer == 0)
     { // timer sudah mencapai 0
-      TIMSK1 &= ~(1 << OCIE1A);
+      PIN_BUZZ = 1;
+      start = 0;
     }
     if (seconds_timer <= -1)
     {
@@ -181,6 +184,32 @@ interrupt[TIM1_COMPA] void timera_compa_isr(void)
     digits[1] = minutes_stopwatch % 10;
     digits[2] = seconds_stopwatch / 10;
     digits[3] = seconds_stopwatch % 10;
+  }
+  } else{
+    seconds_jam++;
+
+    // Check if 1 Minute has Passed
+    if (seconds_jam >= 60)
+    {
+      seconds_jam = 0;
+      minutes_jam++;
+    }
+    if (minutes_jam >= 60)
+    {
+      minutes_jam = 0;
+    }
+    if (mode == 2){
+    digits[0] = minutes_stopwatch / 10;
+    digits[1] = minutes_stopwatch % 10;
+    digits[2] = seconds_stopwatch / 10;
+    digits[3] = seconds_stopwatch % 10;    
+    }
+    else if(mode == 1) {
+    digits[0] = minutes_timer / 10;
+    digits[1] = minutes_timer % 10;
+    digits[2] = seconds_timer / 10;
+    digits[3] = seconds_timer % 10;
+    } 
   }
 }
 
@@ -532,24 +561,24 @@ void stopWatch(void)
 #asm("sei")
   seconds_stopwatch = 0;
   minutes_stopwatch = 0;
-  TIMSK1 &= ~(1 << OCIE1A);
+  start = 0;
 
   while (!(EIFR & (1 << INTF1)))
   {                    // menunggu sampai interrupt ditekan
     if (BUTTON_D == 1) // start
     {
       delay_ms(300);
-      TIMSK1 |= (1 << OCIE1A);
+      start = 1;
     }
     else if (BUTTON_C == 1) // pause
     {
       delay_ms(300);
-      TIMSK1 &= ~(1 << OCIE1A);
+      start = 0;
     }
     else if (BUTTON_B == 1)
     { // pause and reset
       delay_ms(300);
-      TIMSK1 &= ~(1 << OCIE1A);
+      start = 0;
       seconds_stopwatch = 0;
       minutes_stopwatch = 0;
     }
@@ -571,7 +600,6 @@ void alarmTimer(void)
 {
 #asm("sei")
   start = 0;
-  TIMSK1 &= ~(1 << OCIE1A);
   seconds_timer = 0;
   minutes_timer = 0;
   while (!(EIFR & (1 << INTF1)))
@@ -579,6 +607,7 @@ void alarmTimer(void)
     if (BUTTON_D == 1)
     {
       delay_ms(300);
+      PIN_BUZZ = 0;
       seconds_timer++;
       if (seconds_timer >= 60)
       {
@@ -588,6 +617,7 @@ void alarmTimer(void)
     else if (BUTTON_C == 1)
     {
       delay_ms(300);
+      PIN_BUZZ = 0;
       minutes_timer++;
       if (minutes_timer >= 60)
       {
@@ -597,7 +627,6 @@ void alarmTimer(void)
     else if (BUTTON_B == 1)
     {
       delay_ms(300);
-      TIMSK1 |= (1 << OCIE1A);
       start = 1;
     }
     // Update Digit Values
@@ -605,10 +634,6 @@ void alarmTimer(void)
     digits[1] = minutes_timer % 10;
     digits[2] = seconds_timer / 10;
     digits[3] = seconds_timer % 10;
-    if (minutes_timer == 0 && seconds_timer == 0 && start == 1)
-    {
-      PIN_BUZZ = 1;
-    }
   }
   // Clear the external interrupt flag
   EIFR &= (0 << INTF1);
@@ -631,5 +656,4 @@ void tampilanJam(void)
   // Return from function
   return;
 }
-
 
