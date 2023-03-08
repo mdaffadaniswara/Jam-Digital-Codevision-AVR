@@ -1,3 +1,42 @@
+/*
+Tugas EL3014 Sistem Mikroprosesor 
+*Modul            : 1 - ATMega328
+*Percobaan        : 1.5.3 Timer dengan CodeVision AVR
+*Hari dan Tanggal : Jumat, 10 Februari 2023
+*Nama (NIM) 1     : Muhammad Daffa Daniswara (13220043)
+*Nama (NIM) 2     : Bostang Palaguna (13220055)
+*Nama File        : jam.c
+*Deskripsi        : sourcecode program jam digital tugas  EL3014  Sistem Mikroprosesor
+*/
+
+// Program JamDigital
+  // mengimplementasikan rangkaian jam digital pada Arduino nano dengan pemrogramam menggunakan CodeVision.
+  // Jam digital menggunaknan interrupt tomobol serta interrupt timer
+// KAMUS
+  // Konstanta
+    //
+  // Variabel
+    // mode : integer
+    // {
+    //   0 : menampilkan jam seperti biasa
+    //   1 : mode stopwatch
+    //   2 : mode timer
+    // }
+    // atur : integer { 1 : menggilir seven segment, 0 : pindah digit saat tombol ditekan }
+    // geser : integer { }
+    // digits : array [0..3] of integer { digit yang ditampilkan pada seven segment }
+    // digit_index : integer { menentukan digit ke-berapa yang menyala }
+    // start : integer { 0 : menyatakan waktu tidak berubah, 1 : menyatakan waktu berubah }
+    //
+    // seconds_jam : integer { informasi detik pada mode tampilan waktu }
+    // minutes_jam : integer { informasi menit pada mode tampilan waktu }
+    // seconds_timer : integer { informasi detik pada mode timer }
+    // minutes_timer : integer { informasi menit pada mode timer }
+    // seconds_stopwatch : integer { informasi detik  pada mode stopwatch }
+    // minutes_stopwatch : integer { informasi menit pada mode stopwatch }
+
+// ALGORITMA UTAMA
+
 // Include library yang dibutuhkan
 #include <mega328p.h>
 #include <avr/interrupt.h>
@@ -17,25 +56,26 @@ void tampilanJam(void);
 // DEKLARASI VARIABEL
 
 // Mendefinisikan pin seven segment, button, dan buzzer
-#define DIGIT_1 PORTB.5
-#define DIGIT_2 PORTB.3
-#define DIGIT_3 PORTB.4
-#define DIGIT_4 PORTB.2
-#define SEG_A PORTB.0
-#define SEG_B PORTD.6
-#define SEG_C PORTD.7
-#define SEG_D PORTB.1
-#define SEG_E PORTC.1
-#define SEG_F PORTD.4
-#define SEG_G PORTC.0
-#define SEG_DP PORTD.5
-#define BUTTON_A PIND.3
-#define BUTTON_B PINC.5
-#define BUTTON_C PINC.4
-#define BUTTON_D PINC.3
-#define PIN_BUZZ PORTD.2
+#define DIGIT_1 PORTB.4
+#define DIGIT_2 PORTB.5
+#define DIGIT_3 PORTC.0
+#define DIGIT_4 PORTC.1
+#define SEG_A PORTD.4
+#define SEG_B PORTD.5
+#define SEG_C PORTD.6
+#define SEG_D PORTD.7
+#define SEG_E PORTB.0
+#define SEG_F PORTB.1
+#define SEG_G PORTB.2
+#define SEG_DP PORTB.3
+#define BUTTON_A PIND.0
+#define BUTTON_B PIND.1
+#define BUTTON_C PIND.2
+#define BUTTON_D PIND.3
+#define PIN_BUZZ PORTC.2
 
-// Mendefinisikan variabel waktu
+
+// Mendefinisikan variabel waktu yang akan ditampilkan pada seven segment
 int seconds_jam = 0;
 int minutes_jam = 0;
 int seconds_timer = 0;
@@ -46,79 +86,166 @@ int minutes_stopwatch = 0;
 // Mendefinisikan variabel digit
 int digits[4] = {0, 0, 0, 0};
 int digit_index = 0;
-
 int atur = 1;
 int geser = 1;
 int mode = 0;
-
 int start = 0;
 
 // IMPLEMENTASI INTERRUPT
 
 // External Interrupt
+// Mengatur mode jam 
 interrupt[EXT_INT1] void ext_int1_isr(void)
 {
   PIN_BUZZ = 0;
   delay_ms(300);
-  if (mode == 1)
-  { // mode stopwatch
-    atur = 1;
-    mode = 2;
-    start = 0;
-    stopWatch();
-  }
+  
+  // mode tampilan
   else if (mode == 0)
-  { // mode tampilan
+  {
     atur = 1;
     mode = 1;
     start = 1;
     TIMSK1 |= (1 << OCIE1A);
     tampilanJam();
   }
+
+  // mode stopwatch
+  if (mode == 1)
+  {
+    atur = 1;
+    mode = 2;
+    start = 0;
+    stopWatch();
+  }
+
+  // mode timer
   else if (mode == 2)
-  { // mode timer
+  {
     atur = 1;
     mode = 0;
     start = 0; 
     alarmTimer();
   }
-  /*else if (mode == 0)
-  {           //mode mengatur
-    mode = 1;
-    TIMSK1 &= ~(1 << OCIE1A);
-    aturJam();
-  }  */
 }
 
-// Timer1 Compare Match A Interrupt
+// menggunakan interrupt waktu setiap satu detik untuk mengubah waktu
 interrupt[TIM1_COMPA] void timera_compa_isr(void)
 { 
-  if (start == 1){
-  if (mode == 1)
+  // saatnya waktu berubah
+  if (start == 1)
   {
-    // Check if 1 Second has Passed
-    seconds_jam++;
+    // mengatur digit seven segment saat mode : penampilan jam
+    if (mode == 1)
+    {
+      // satu detik berlalu
+      seconds_jam++;
 
-    // Check if 1 Minute has Passed
-    if (seconds_jam >= 60)
-    {
-      seconds_jam = 0;
-      minutes_jam++;
+      // satu menit berlalu
+      if (seconds_jam >= 60)
+      {
+        seconds_jam = 0;
+        minutes_jam++;
+      }
+      // satu jam telah berlalu
+      if (minutes_jam >= 60)
+      {
+        minutes_jam = 0;
+      }
+
+      // mengubah nilai digit seven segment
+      digits[0] = minutes_jam / 10;
+      digits[1] = minutes_jam % 10;
+      digits[2] = seconds_jam / 10;
+      digits[3] = seconds_jam % 10;
     }
-    if (minutes_jam >= 60)
+
+    // mengatur digit seven segment saat mode : timer
+    else if(mode == 0)
     {
-      minutes_jam = 0;
+      // satu detik berlalu
+      seconds_timer--;
+      seconds_jam++;
+
+      // satu menit berlalu
+      if (seconds_jam >= 60)
+      {
+        seconds_jam = 0;
+        minutes_jam++;
+      }
+
+      // satu jam telah berlalu
+      if (minutes_jam >= 60)
+      {
+        minutes_jam = 0;
+      }
+
+      // saat timer telah selesai, buzzer berbunyi dan reset timer
+      if (seconds_timer == 0 && minutes_timer == 0)
+      { // timer sudah mencapai 0
+        PIN_BUZZ = 1;
+        start = 0;
+      }
+        // transisi detik ke xy:00 menjadi x(y-1) : 59
+      if (seconds_timer <= -1)
+      {
+        seconds_timer = 59;
+        minutes_timer--;
+      }
+        
+      if (minutes_timer <= -1)
+      {
+        minutes_timer = 0;
+      }
+
+      // mengubah nilai digit seven segment
+      digits[0] = minutes_timer / 10;
+      digits[1] = minutes_timer % 10;
+      digits[2] = seconds_timer / 10;
+      digits[3] = seconds_timer % 10;
     }
-    // Update Digit Values
-    digits[0] = minutes_jam / 10;
-    digits[1] = minutes_jam % 10;
-    digits[2] = seconds_jam / 10;
-    digits[3] = seconds_jam % 10;
+    
+    // mengatur digit seven segment saat mode : stopwatch
+    else if (mode == 2)
+    {
+      // satu detik berlalu
+      seconds_stopwatch++;
+      seconds_jam++; // waktu jam juga ditambah supaya waktu jam juga ikut berubah
+
+      if (seconds_jam >= 60)
+      {
+        seconds_jam = 0;
+        minutes_jam++;
+      }
+      if (minutes_jam >= 60)
+      {
+        minutes_jam = 0;
+      }
+
+      // satu menit berlalu
+      if (seconds_stopwatch >= 60)
+      {
+        seconds_stopwatch = 0;
+        minutes_stopwatch++;
+      }
+
+      // satu jam berlalu
+      if (minutes_stopwatch >= 60)
+      {
+        minutes_stopwatch = 00;
+      }
+
+      // mengubah nilai digit seven segment
+      digits[0] = minutes_stopwatch / 10;
+      digits[1] = minutes_stopwatch % 10;
+      digits[2] = seconds_stopwatch / 10;
+      digits[3] = seconds_stopwatch % 10;
+    }
   }
-  else if(mode == 0)
+
+  // saatnya waktu diam
+  else
   {
-    // Check if 1 Second has Passed
-    seconds_timer--;
     seconds_jam++;
 
     // Check if 1 Minute has Passed
@@ -131,96 +258,30 @@ interrupt[TIM1_COMPA] void timera_compa_isr(void)
     {
       minutes_jam = 0;
     }
-
-    // Check if 1 Minute has Passed
-    if (seconds_timer == 0 && minutes_timer == 0)
-    { // timer sudah mencapai 0
-      PIN_BUZZ = 1;
-      start = 0;
-    }
-    if (seconds_timer <= -1)
+    if (mode == 2)
     {
-      seconds_timer = 59;
-      minutes_timer--;
+      digits[0] = minutes_stopwatch / 10;
+      digits[1] = minutes_stopwatch % 10;
+      digits[2] = seconds_stopwatch / 10;
+      digits[3] = seconds_stopwatch % 10;    
     }
-    if (minutes_timer <= -1)
+    else if(mode == 1)
     {
-      minutes_timer = 0;
-    }
-    // Update Digit Values
-    digits[0] = minutes_timer / 10;
-    digits[1] = minutes_timer % 10;
-    digits[2] = seconds_timer / 10;
-    digits[3] = seconds_timer % 10;
-  }
-  else if (mode == 2)
-  {
-    // Check if 1 Second has Passed
-    seconds_stopwatch++;
-    seconds_jam++;
-
-    // Check if 1 Minute has Passed
-    if (seconds_jam >= 60)
-    {
-      seconds_jam = 0;
-      minutes_jam++;
-    }
-    if (minutes_jam >= 60)
-    {
-      minutes_jam = 0;
-    }
-    // Check if 1 Minute has Passed
-    if (seconds_stopwatch >= 60)
-    {
-      seconds_stopwatch = 0;
-      minutes_stopwatch++;
-    }
-    if (minutes_stopwatch >= 60)
-    {
-      minutes_stopwatch = 00;
-    }
-    // Update Digit Values
-    digits[0] = minutes_stopwatch / 10;
-    digits[1] = minutes_stopwatch % 10;
-    digits[2] = seconds_stopwatch / 10;
-    digits[3] = seconds_stopwatch % 10;
-  }
-  } else{
-    seconds_jam++;
-
-    // Check if 1 Minute has Passed
-    if (seconds_jam >= 60)
-    {
-      seconds_jam = 0;
-      minutes_jam++;
-    }
-    if (minutes_jam >= 60)
-    {
-      minutes_jam = 0;
-    }
-    if (mode == 2){
-    digits[0] = minutes_stopwatch / 10;
-    digits[1] = minutes_stopwatch % 10;
-    digits[2] = seconds_stopwatch / 10;
-    digits[3] = seconds_stopwatch % 10;    
-    }
-    else if(mode == 1) {
-    digits[0] = minutes_timer / 10;
-    digits[1] = minutes_timer % 10;
-    digits[2] = seconds_timer / 10;
-    digits[3] = seconds_timer % 10;
+      digits[0] = minutes_timer / 10;
+      digits[1] = minutes_timer % 10;
+      digits[2] = seconds_timer / 10;
+      digits[3] = seconds_timer % 10;
     } 
   }
 }
 
-// Timer0 Overflow Interrupt
+// menggunakan interrupt waktu setiap 1ms untuk menggilir seven segment
 interrupt[TIM0_OVF] void timer0_ovf_isr(void)
 {
-  // Update Segment Values for Current Digit
+  // mengubah digit seven segment
   SevenSegment(digits[digit_index]);
 
-  // Enable Multiplexing for Current Digit
-  // Elif for choose seven SevenSegmen
+  // multiplexing / menggilir digit seven segment
   if (atur == 1)
   {
     if (digit_index == 0)
@@ -322,7 +383,6 @@ interrupt[TIM0_OVF] void timer0_ovf_isr(void)
   }
 }
 
-// ALGORITMA UTAMA
 
 void main(void)
 {
@@ -363,10 +423,11 @@ void init_int1(void)
   TIMSK1 = 0b00000010;
 }
 
+// inisiasi timer interrupt2 untuk setiap 1 ms
 void init_int2(void)
-{ // 1ms
+{ 
   TIMSK0 = 0b00000001;
-  TCCR0B = (1 << CS02); // 256
+  TCCR0B = (1 << CS02); // mengatur pre-scaler 256
   TCNT0 = 0x83;
 }
 

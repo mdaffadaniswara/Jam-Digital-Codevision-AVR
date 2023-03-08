@@ -6,7 +6,7 @@
 ;Build configuration    : Debug
 ;Chip type              : ATmega328P
 ;Program type           : Application
-;Clock frequency        : 16,000000 MHz
+;Clock frequency        : 16.000000 MHz
 ;Memory model           : Small
 ;Optimize for           : Size
 ;(s)printf features     : int, width
@@ -1417,18 +1417,18 @@ __DELAY_USW_LOOP:
 	.ENDM
 
 ;NAME DEFINITIONS FOR GLOBAL VARIABLES ALLOCATED TO REGISTERS
-	.DEF _mode=R3
-	.DEF _mode_msb=R4
-	.DEF _seconds_jam=R5
-	.DEF _seconds_jam_msb=R6
-	.DEF _minutes_jam=R7
-	.DEF _minutes_jam_msb=R8
-	.DEF _seconds_timer=R9
-	.DEF _seconds_timer_msb=R10
-	.DEF _minutes_timer=R11
-	.DEF _minutes_timer_msb=R12
-	.DEF _seconds_stopwatch=R13
-	.DEF _seconds_stopwatch_msb=R14
+	.DEF _seconds_jam=R3
+	.DEF _seconds_jam_msb=R4
+	.DEF _minutes_jam=R5
+	.DEF _minutes_jam_msb=R6
+	.DEF _seconds_timer=R7
+	.DEF _seconds_timer_msb=R8
+	.DEF _minutes_timer=R9
+	.DEF _minutes_timer_msb=R10
+	.DEF _seconds_stopwatch=R11
+	.DEF _seconds_stopwatch_msb=R12
+	.DEF _minutes_stopwatch=R13
+	.DEF _minutes_stopwatch_msb=R14
 
 ;GPIOR0 INITIALIZATION VALUE
 	.EQU __GPIOR0_INIT=0x00
@@ -1473,9 +1473,9 @@ __REG_VARS:
 	.DB  0x0,0x0,0x0,0x0
 	.DB  0x0,0x0,0x0,0x0
 
-_0xA2:
+_0x3:
 	.DB  0x1
-_0xA3:
+_0x4:
 	.DB  0x1
 
 __GLOBAL_INI_TBL:
@@ -1485,11 +1485,11 @@ __GLOBAL_INI_TBL:
 
 	.DW  0x01
 	.DW  _atur
-	.DW  _0xA2*2
+	.DW  _0x3*2
 
 	.DW  0x01
 	.DW  _geser
-	.DW  _0xA3*2
+	.DW  _0x4*2
 
 _0xFFFFFFFF:
 	.DW  0
@@ -1583,787 +1583,96 @@ __GLOBAL_INI_END:
 	.EQU __sm_ext_standby=0x0E
 	.SET power_ctrl_reg=smcr
 	#endif
-;void init_int1(void)
-; 0000 0019 {                        // 1s
-
-	.CSEG
-_init_int1:
-; .FSTART _init_int1
-; 0000 001A TCCR1A = (1 << WGM12); // ctc
-	LDI  R30,LOW(8)
-	STS  128,R30
-; 0000 001B TCCR1B = (1 << CS12);  // 256
-	LDI  R30,LOW(4)
-	STS  129,R30
-; 0000 001C TCNT1H = 0;
-	LDI  R30,LOW(0)
-	STS  133,R30
-; 0000 001D TCNT1L = 0;
-	STS  132,R30
-; 0000 001E OCR1AH = 0xF4;
-	LDI  R30,LOW(244)
-	STS  137,R30
-; 0000 001F OCR1AL = 0x24;
-	LDI  R30,LOW(36)
-	STS  136,R30
-; 0000 0020 TIMSK1 = 0b00000010;
-	LDI  R30,LOW(2)
-	STS  111,R30
-; 0000 0021 }
-	RET
-; .FEND
-;void init_int2(void)
-; 0000 0024 { // 1ms
-_init_int2:
-; .FSTART _init_int2
-; 0000 0025 TIMSK0 = 0b00000001;
-	LDI  R30,LOW(1)
-	STS  110,R30
-; 0000 0026 TCCR0B = (1 << CS02); // 256
-	LDI  R30,LOW(4)
-	OUT  0x25,R30
-; 0000 0027 TCNT0 = 0x83;
-	LDI  R30,LOW(131)
-	OUT  0x26,R30
-; 0000 0028 }
-	RET
-; .FEND
-;void init_buttonA(void)
-; 0000 002B {
-_init_buttonA:
-; .FSTART _init_buttonA
-; 0000 002C // SET FALLING EDGE PADA INT1
-; 0000 002D EICRA = (1 << ISC11) | (0 << ISC10) | (0 << ISC01) | (0 << ISC00);
-	LDI  R30,LOW(8)
-	STS  105,R30
-; 0000 002E // ENABLE INT1
-; 0000 002F EIMSK = (1 << INT1) | (0 << INT0);
-	LDI  R30,LOW(2)
-	OUT  0x1D,R30
-; 0000 0030 }
-	RET
-; .FEND
-;void SevenSegment(int num)
-; 0000 0034 {
-_SevenSegment:
-; .FSTART _SevenSegment
-; 0000 0035 // Elif for number modifier Seven Segments
-; 0000 0036 if (num == 0)
-	ST   -Y,R17
-	ST   -Y,R16
-	MOVW R16,R26
-;	num -> R16,R17
-	MOV  R0,R16
-	OR   R0,R17
-	BRNE _0x3
-; 0000 0037 {
-; 0000 0038 SEG_A = 0;
-	RCALL SUBOPT_0x0
-; 0000 0039 SEG_B = 0;
-; 0000 003A SEG_C = 0;
-; 0000 003B SEG_D = 0;
-; 0000 003C SEG_E = 0;
-	CBI  0x8,1
-; 0000 003D SEG_F = 0;
-	CBI  0xB,4
-; 0000 003E SEG_G = 1;
-	SBI  0x8,0
-; 0000 003F }
-; 0000 0040 else if (num == 1)
-	RJMP _0x12
-_0x3:
-	LDI  R30,LOW(1)
-	LDI  R31,HIGH(1)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x13
-; 0000 0041 {
-; 0000 0042 SEG_A = 1;
-	RCALL SUBOPT_0x1
-; 0000 0043 SEG_B = 0;
-; 0000 0044 SEG_C = 0;
-; 0000 0045 SEG_D = 1;
-; 0000 0046 SEG_E = 1;
-	SBI  0x8,1
-; 0000 0047 SEG_F = 1;
-	SBI  0xB,4
-; 0000 0048 SEG_G = 1;
-	SBI  0x8,0
-; 0000 0049 }
-; 0000 004A else if (num == 2)
-	RJMP _0x22
-_0x13:
-	LDI  R30,LOW(2)
-	LDI  R31,HIGH(2)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x23
-; 0000 004B {
-; 0000 004C SEG_A = 0;
-	CBI  0x5,0
-; 0000 004D SEG_B = 0;
-	CBI  0xB,6
-; 0000 004E SEG_C = 1;
-	SBI  0xB,7
-; 0000 004F SEG_D = 0;
-	CBI  0x5,1
-; 0000 0050 SEG_E = 0;
-	CBI  0x8,1
-; 0000 0051 SEG_F = 1;
-	SBI  0xB,4
-; 0000 0052 SEG_G = 0;
-	RJMP _0x176
-; 0000 0053 }
-; 0000 0054 else if (num == 3)
-_0x23:
-	LDI  R30,LOW(3)
-	LDI  R31,HIGH(3)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x33
-; 0000 0055 {
-; 0000 0056 SEG_A = 0;
-	RCALL SUBOPT_0x0
-; 0000 0057 SEG_B = 0;
-; 0000 0058 SEG_C = 0;
-; 0000 0059 SEG_D = 0;
-; 0000 005A SEG_E = 1;
-	SBI  0x8,1
-; 0000 005B SEG_F = 1;
-	SBI  0xB,4
-; 0000 005C SEG_G = 0;
-	RJMP _0x176
-; 0000 005D }
-; 0000 005E else if (num == 4)
-_0x33:
-	LDI  R30,LOW(4)
-	LDI  R31,HIGH(4)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x43
-; 0000 005F {
-; 0000 0060 SEG_A = 1;
-	RCALL SUBOPT_0x1
-; 0000 0061 SEG_B = 0;
-; 0000 0062 SEG_C = 0;
-; 0000 0063 SEG_D = 1;
-; 0000 0064 SEG_E = 1;
-	RJMP _0x177
-; 0000 0065 SEG_F = 0;
-; 0000 0066 SEG_G = 0;
-; 0000 0067 }
-; 0000 0068 else if (num == 5)
-_0x43:
-	LDI  R30,LOW(5)
-	LDI  R31,HIGH(5)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x53
-; 0000 0069 {
-; 0000 006A SEG_A = 0;
-	CBI  0x5,0
-; 0000 006B SEG_B = 1;
-	SBI  0xB,6
-; 0000 006C SEG_C = 0;
-	RJMP _0x178
-; 0000 006D SEG_D = 0;
-; 0000 006E SEG_E = 1;
-; 0000 006F SEG_F = 0;
-; 0000 0070 SEG_G = 0;
-; 0000 0071 }
-; 0000 0072 else if (num == 6)
-_0x53:
-	LDI  R30,LOW(6)
-	LDI  R31,HIGH(6)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x63
-; 0000 0073 {
-; 0000 0074 SEG_A = 0;
-	CBI  0x5,0
-; 0000 0075 SEG_B = 1;
-	SBI  0xB,6
-; 0000 0076 SEG_C = 0;
-	CBI  0xB,7
-; 0000 0077 SEG_D = 0;
-	CBI  0x5,1
-; 0000 0078 SEG_E = 0;
-	CBI  0x8,1
-; 0000 0079 SEG_F = 0;
-	RJMP _0x179
-; 0000 007A SEG_G = 0;
-; 0000 007B }
-; 0000 007C else if (num == 7)
-_0x63:
-	LDI  R30,LOW(7)
-	LDI  R31,HIGH(7)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x73
-; 0000 007D {
-; 0000 007E SEG_A = 0;
-	CBI  0x5,0
-; 0000 007F SEG_B = 0;
-	CBI  0xB,6
-; 0000 0080 SEG_C = 0;
-	CBI  0xB,7
-; 0000 0081 SEG_D = 1;
-	SBI  0x5,1
-; 0000 0082 SEG_E = 1;
-	SBI  0x8,1
-; 0000 0083 SEG_F = 1;
-	SBI  0xB,4
-; 0000 0084 SEG_G = 1;
-	SBI  0x8,0
-; 0000 0085 }
-; 0000 0086 else if (num == 8)
-	RJMP _0x82
-_0x73:
-	LDI  R30,LOW(8)
-	LDI  R31,HIGH(8)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x83
-; 0000 0087 {
-; 0000 0088 SEG_A = 0;
-	RCALL SUBOPT_0x0
-; 0000 0089 SEG_B = 0;
-; 0000 008A SEG_C = 0;
-; 0000 008B SEG_D = 0;
-; 0000 008C SEG_E = 0;
-	CBI  0x8,1
-; 0000 008D SEG_F = 0;
-	RJMP _0x179
-; 0000 008E SEG_G = 0;
-; 0000 008F }
-; 0000 0090 else if (num == 9)
-_0x83:
-	LDI  R30,LOW(9)
-	LDI  R31,HIGH(9)
-	CP   R30,R16
-	CPC  R31,R17
-	BRNE _0x93
-; 0000 0091 {
-; 0000 0092 SEG_A = 0;
-	CBI  0x5,0
-; 0000 0093 SEG_B = 0;
-	CBI  0xB,6
-; 0000 0094 SEG_C = 0;
-_0x178:
-	CBI  0xB,7
-; 0000 0095 SEG_D = 0;
-	CBI  0x5,1
-; 0000 0096 SEG_E = 1;
-_0x177:
-	SBI  0x8,1
-; 0000 0097 SEG_F = 0;
-_0x179:
-	CBI  0xB,4
-; 0000 0098 SEG_G = 0;
-_0x176:
-	CBI  0x8,0
-; 0000 0099 }
-; 0000 009A }
-_0x93:
-_0x82:
-_0x22:
-_0x12:
-	LD   R16,Y+
-	LD   R17,Y+
-	RET
-; .FEND
+;void init_int1(void);
+;void init_int2(void);
+;void init_buttonA(void);
+;void SevenSegment(int num);
+;void aturJam(void);
+;void stopWatch(void);
+;void alarmTimer(void);
+;void tampilanJam(void);
 
 	.DSEG
-;void aturJam(void)
-; 0000 00AD {
+;interrupt[3] void ext_int1_isr(void)
+; 0000 0050 {
 
 	.CSEG
-_aturJam:
-; .FSTART _aturJam
-; 0000 00AE #asm("sei")
-	SEI
-; 0000 00AF atur = 0;
-	LDI  R30,LOW(0)
-	STS  _atur,R30
-	STS  _atur+1,R30
-; 0000 00B0 TIMSK1 &= ~(1 << OCIE1A);
-	RCALL SUBOPT_0x2
-; 0000 00B1 while (!(EIFR & (1 << INTF1)))
-_0xA4:
-	SBIC 0x1C,1
-	RJMP _0xA6
-; 0000 00B2 { // menunggu sampai interrupt ditekan
-; 0000 00B3 if (BUTTON_D == 1)
-	SBIS 0x6,3
-	RJMP _0xA7
-; 0000 00B4 {
-; 0000 00B5 delay_ms(300);
-	RCALL SUBOPT_0x3
-; 0000 00B6 if (geser == 0)
-	BRNE _0xA8
-; 0000 00B7 {
-; 0000 00B8 seconds_jam++;
-	__GETW1R 5,6
-	ADIW R30,1
-	__PUTW1R 5,6
-	SBIW R30,1
-; 0000 00B9 if (seconds_jam >= 60)
-	RCALL SUBOPT_0x4
-	BRLT _0xA9
-; 0000 00BA {
-; 0000 00BB seconds_jam = 0;
-	CLR  R5
-	CLR  R6
-; 0000 00BC }
-; 0000 00BD }
-_0xA9:
-; 0000 00BE else
-	RJMP _0xAA
-_0xA8:
-; 0000 00BF {
-; 0000 00C0 minutes_jam++;
-	RCALL SUBOPT_0x5
-; 0000 00C1 if (minutes_jam >= 60)
-	RCALL SUBOPT_0x6
-	BRLT _0xAB
-; 0000 00C2 {
-; 0000 00C3 minutes_jam = 0;
-	CLR  R7
-	CLR  R8
-; 0000 00C4 }
-; 0000 00C5 }
-_0xAB:
-_0xAA:
-; 0000 00C6 }
-; 0000 00C7 else if (BUTTON_C == 1)
-	RJMP _0xAC
-_0xA7:
-	SBIS 0x6,4
-	RJMP _0xAD
-; 0000 00C8 {
-; 0000 00C9 delay_ms(300);
-	RCALL SUBOPT_0x3
-; 0000 00CA if (geser == 0)
-	BRNE _0xAE
-; 0000 00CB {
-; 0000 00CC seconds_jam--;
-	__GETW1R 5,6
-	SBIW R30,1
-	__PUTW1R 5,6
-	ADIW R30,1
-; 0000 00CD if (seconds_jam <= -1)
-	LDI  R30,LOW(65535)
-	LDI  R31,HIGH(65535)
-	CP   R30,R5
-	CPC  R31,R6
-	BRLT _0xAF
-; 0000 00CE {
-; 0000 00CF seconds_jam = 59;
-	LDI  R30,LOW(59)
-	LDI  R31,HIGH(59)
-	__PUTW1R 5,6
-; 0000 00D0 }
-; 0000 00D1 }
-_0xAF:
-; 0000 00D2 else
-	RJMP _0xB0
-_0xAE:
-; 0000 00D3 {
-; 0000 00D4 minutes_jam--;
-	__GETW1R 7,8
-	SBIW R30,1
-	__PUTW1R 7,8
-; 0000 00D5 if (minutes_jam <= -1)
-	LDI  R30,LOW(65535)
-	LDI  R31,HIGH(65535)
-	CP   R30,R7
-	CPC  R31,R8
-	BRLT _0xB1
-; 0000 00D6 {
-; 0000 00D7 minutes_jam = 59;
-	LDI  R30,LOW(59)
-	LDI  R31,HIGH(59)
-	__PUTW1R 7,8
-; 0000 00D8 }
-; 0000 00D9 }
-_0xB1:
-_0xB0:
-; 0000 00DA }
-; 0000 00DB else if (BUTTON_B == 1)
-	RJMP _0xB2
-_0xAD:
-	SBIS 0x6,5
-	RJMP _0xB3
-; 0000 00DC {
-; 0000 00DD delay_ms(300);
-	RCALL SUBOPT_0x3
-; 0000 00DE if (geser == 0)
-	BRNE _0xB4
-; 0000 00DF {
-; 0000 00E0 geser = 1;
-	LDI  R30,LOW(1)
-	LDI  R31,HIGH(1)
-	STS  _geser,R30
-	STS  _geser+1,R31
-; 0000 00E1 }
-; 0000 00E2 else
-	RJMP _0xB5
-_0xB4:
-; 0000 00E3 {
-; 0000 00E4 geser = 0;
-	LDI  R30,LOW(0)
-	STS  _geser,R30
-	STS  _geser+1,R30
-; 0000 00E5 }
-_0xB5:
-; 0000 00E6 }
-; 0000 00E7 // Update Digit Values
-; 0000 00E8 digits[0] = minutes_jam / 10;
-_0xB3:
-_0xB2:
-_0xAC:
-	RCALL SUBOPT_0x7
-	RCALL SUBOPT_0x8
-; 0000 00E9 digits[1] = minutes_jam % 10;
-	RCALL SUBOPT_0x7
-	RCALL SUBOPT_0x9
-; 0000 00EA digits[2] = seconds_jam / 10;
-	RCALL SUBOPT_0xA
-	RCALL SUBOPT_0xB
-; 0000 00EB digits[3] = seconds_jam % 10;
-	RCALL SUBOPT_0xA
-	RCALL SUBOPT_0xC
-; 0000 00EC }
-	RJMP _0xA4
-_0xA6:
-; 0000 00ED atur = 1;
-	RCALL SUBOPT_0xD
-; 0000 00EE // Clear the external interrupt flag
-; 0000 00EF EIFR &= (0 << INTF1);
-	RJMP _0x2000001
-; 0000 00F0 
-; 0000 00F1 // Return from function
-; 0000 00F2 return;
-; 0000 00F3 }
-; .FEND
-;void stopWatch(void)
-; 0000 00F6 {
-_stopWatch:
-; .FSTART _stopWatch
-; 0000 00F7 #asm("sei")
-	SEI
-; 0000 00F8 seconds_stopwatch = 0;
-	RCALL SUBOPT_0xE
-; 0000 00F9 minutes_stopwatch = 0;
-; 0000 00FA TIMSK1 &= ~(1 << OCIE1A);
-	RCALL SUBOPT_0x2
-; 0000 00FB 
-; 0000 00FC while (!(EIFR & (1 << INTF1)))
-_0xB6:
-	SBIC 0x1C,1
-	RJMP _0xB8
-; 0000 00FD {                    // menunggu sampai interrupt ditekan
-; 0000 00FE if (BUTTON_D == 1) // start
-	SBIS 0x6,3
-	RJMP _0xB9
-; 0000 00FF {
-; 0000 0100 delay_ms(300);
-	RCALL SUBOPT_0xF
-; 0000 0101 TIMSK1 |= (1 << OCIE1A);
-; 0000 0102 }
-; 0000 0103 else if (BUTTON_C == 1) // pause
-	RJMP _0xBA
-_0xB9:
-	SBIS 0x6,4
-	RJMP _0xBB
-; 0000 0104 {
-; 0000 0105 delay_ms(300);
-	RCALL SUBOPT_0x10
-; 0000 0106 TIMSK1 &= ~(1 << OCIE1A);
-; 0000 0107 }
-; 0000 0108 else if (BUTTON_B == 1)
-	RJMP _0xBC
-_0xBB:
-	SBIS 0x6,5
-	RJMP _0xBD
-; 0000 0109 { // pause and reset
-; 0000 010A delay_ms(300);
-	RCALL SUBOPT_0x10
-; 0000 010B TIMSK1 &= ~(1 << OCIE1A);
-; 0000 010C seconds_stopwatch = 0;
-	RCALL SUBOPT_0xE
-; 0000 010D minutes_stopwatch = 0;
-; 0000 010E }
-; 0000 010F // Update Digit Values
-; 0000 0110 digits[0] = minutes_stopwatch / 10;
-_0xBD:
-_0xBC:
-_0xBA:
-	RCALL SUBOPT_0x11
-	RCALL SUBOPT_0x8
-; 0000 0111 digits[1] = minutes_stopwatch % 10;
-	RCALL SUBOPT_0x11
-	RCALL SUBOPT_0x9
-; 0000 0112 digits[2] = seconds_stopwatch / 10;
-	RCALL SUBOPT_0x12
-	RCALL SUBOPT_0xB
-; 0000 0113 digits[3] = seconds_stopwatch % 10;
-	RCALL SUBOPT_0x12
-	RCALL SUBOPT_0xC
-; 0000 0114 }
-	RJMP _0xB6
-_0xB8:
-; 0000 0115 
-; 0000 0116 // Clear the external interrupt flag
-; 0000 0117 EIFR &= (0 << INTF1);
-	RJMP _0x2000001
-; 0000 0118 
-; 0000 0119 // Return from function
-; 0000 011A return;
-; 0000 011B }
-; .FEND
-;void alarmTimer(void)
-; 0000 011F {
-_alarmTimer:
-; .FSTART _alarmTimer
-; 0000 0120 #asm("sei")
-	SEI
-; 0000 0121 start = 0;
-	LDI  R30,LOW(0)
-	STS  _start,R30
-	STS  _start+1,R30
-; 0000 0122 TIMSK1 &= ~(1 << OCIE1A);
-	RCALL SUBOPT_0x2
-; 0000 0123 seconds_timer = 0;
-	CLR  R9
-	CLR  R10
-; 0000 0124 minutes_timer = 0;
-	CLR  R11
-	CLR  R12
-; 0000 0125 while (!(EIFR & (1 << INTF1)))
-_0xBE:
-	SBIC 0x1C,1
-	RJMP _0xC0
-; 0000 0126 { // menunggu sampai interrupt ditekan
-; 0000 0127 if (BUTTON_D == 1)
-	SBIS 0x6,3
-	RJMP _0xC1
-; 0000 0128 {
-; 0000 0129 delay_ms(300);
-	LDI  R26,LOW(300)
-	LDI  R27,HIGH(300)
-	RCALL _delay_ms
-; 0000 012A seconds_timer++;
-	__GETW1R 9,10
-	ADIW R30,1
-	__PUTW1R 9,10
-	SBIW R30,1
-; 0000 012B if (seconds_timer >= 60)
-	LDI  R30,LOW(60)
-	LDI  R31,HIGH(60)
-	CP   R9,R30
-	CPC  R10,R31
-	BRLT _0xC2
-; 0000 012C {
-; 0000 012D seconds_timer = 0;
-	CLR  R9
-	CLR  R10
-; 0000 012E }
-; 0000 012F }
-_0xC2:
-; 0000 0130 else if (BUTTON_C == 1)
-	RJMP _0xC3
-_0xC1:
-	SBIS 0x6,4
-	RJMP _0xC4
-; 0000 0131 {
-; 0000 0132 delay_ms(300);
-	LDI  R26,LOW(300)
-	LDI  R27,HIGH(300)
-	RCALL _delay_ms
-; 0000 0133 minutes_timer++;
-	__GETW1R 11,12
-	ADIW R30,1
-	__PUTW1R 11,12
-	SBIW R30,1
-; 0000 0134 if (minutes_timer >= 60)
-	LDI  R30,LOW(60)
-	LDI  R31,HIGH(60)
-	CP   R11,R30
-	CPC  R12,R31
-	BRLT _0xC5
-; 0000 0135 {
-; 0000 0136 minutes_timer = 0;
-	CLR  R11
-	CLR  R12
-; 0000 0137 }
-; 0000 0138 }
-_0xC5:
-; 0000 0139 else if (BUTTON_B == 1)
-	RJMP _0xC6
-_0xC4:
-	SBIS 0x6,5
-	RJMP _0xC7
-; 0000 013A {
-; 0000 013B delay_ms(300);
-	RCALL SUBOPT_0xF
-; 0000 013C TIMSK1 |= (1 << OCIE1A);
-; 0000 013D start = 1;
-	LDI  R30,LOW(1)
-	LDI  R31,HIGH(1)
-	STS  _start,R30
-	STS  _start+1,R31
-; 0000 013E }
-; 0000 013F // Update Digit Values
-; 0000 0140 digits[0] = minutes_timer / 10;
-_0xC7:
-_0xC6:
-_0xC3:
-	RCALL SUBOPT_0x13
-	RCALL SUBOPT_0x8
-; 0000 0141 digits[1] = minutes_timer % 10;
-	RCALL SUBOPT_0x13
-	RCALL SUBOPT_0x9
-; 0000 0142 digits[2] = seconds_timer / 10;
-	RCALL SUBOPT_0x14
-	RCALL SUBOPT_0xB
-; 0000 0143 digits[3] = seconds_timer % 10;
-	RCALL SUBOPT_0x14
-	RCALL SUBOPT_0xC
-; 0000 0144 if (minutes_timer == 0 && seconds_timer == 0 && start == 1)
-	CLR  R0
-	CP   R0,R11
-	CPC  R0,R12
-	BRNE _0xC9
-	CLR  R0
-	CP   R0,R9
-	CPC  R0,R10
-	BRNE _0xC9
-	LDS  R26,_start
-	LDS  R27,_start+1
-	SBIW R26,1
-	BREQ _0xCA
-_0xC9:
-	RJMP _0xC8
-_0xCA:
-; 0000 0145 {
-; 0000 0146 PIN_BUZZ = 1;
-	SBI  0xB,2
-; 0000 0147 }
-; 0000 0148 }
-_0xC8:
-	RJMP _0xBE
-_0xC0:
-; 0000 0149 // Clear the external interrupt flag
-; 0000 014A EIFR &= (0 << INTF1);
-	RJMP _0x2000001
-; 0000 014B 
-; 0000 014C // Return from function
-; 0000 014D return;
-; 0000 014E }
-; .FEND
-;void tampilanJam(void)
-; 0000 0151 {
-_tampilanJam:
-; .FSTART _tampilanJam
-; 0000 0152 #asm("sei")
-	SEI
-; 0000 0153 
-; 0000 0154 while (!(EIFR & (1 << INTF1)))
-_0xCD:
-	SBIS 0x1C,1
-; 0000 0155 { // menunggu sampai interrupt ditekan
-; 0000 0156 }
-	RJMP _0xCD
-; 0000 0157 
-; 0000 0158 // Clear the external interrupt flag
-; 0000 0159 EIFR &= (0 << INTF1);
-_0x2000001:
-	IN   R30,0x1C
-	ANDI R30,LOW(0x0)
-	OUT  0x1C,R30
-; 0000 015A 
-; 0000 015B // Return from function
-; 0000 015C return;
-	RET
-; 0000 015D }
-; .FEND
-;interrupt[3] void ext_int1_isr(void)
-; 0000 0161 {
 _ext_int1_isr:
 ; .FSTART _ext_int1_isr
-	RCALL SUBOPT_0x15
-; 0000 0162 PIN_BUZZ = 0;
-	CBI  0xB,2
-; 0000 0163 delay_ms(300);
+	RCALL SUBOPT_0x0
+; 0000 0051 PIN_BUZZ = 0;
+	CBI  0x8,2
+; 0000 0052 delay_ms(300);
 	LDI  R26,LOW(300)
 	LDI  R27,HIGH(300)
 	RCALL _delay_ms
-; 0000 0164 if (mode == 1)
-	RCALL SUBOPT_0x16
-	BRNE _0xD2
-; 0000 0165 { // mode stopwatch
-; 0000 0166 atur = 1;
-	RCALL SUBOPT_0xD
-; 0000 0167 mode = 2;
+; 0000 0053 if (mode == 1)
+	RCALL SUBOPT_0x1
+	SBIW R26,1
+	BRNE _0x7
+; 0000 0054 { // mode stopwatch
+; 0000 0055 atur = 1;
+	RCALL SUBOPT_0x2
+; 0000 0056 mode = 2;
 	LDI  R30,LOW(2)
 	LDI  R31,HIGH(2)
-	__PUTW1R 3,4
-; 0000 0168 TIMSK1 &= ~(1 << OCIE1A);
-	RCALL SUBOPT_0x2
-; 0000 0169 stopWatch();
+	RCALL SUBOPT_0x3
+; 0000 0057 start = 0;
+	RCALL SUBOPT_0x4
+; 0000 0058 stopWatch();
 	RCALL _stopWatch
-; 0000 016A }
-; 0000 016B else if (mode == 0)
-	RJMP _0xD3
-_0xD2:
-	MOV  R0,R3
-	OR   R0,R4
-	BRNE _0xD4
-; 0000 016C { // mode tampilan
-; 0000 016D atur = 1;
-	RCALL SUBOPT_0xD
-; 0000 016E mode = 1;
+; 0000 0059 }
+; 0000 005A else if (mode == 0)
+	RJMP _0x8
+_0x7:
+	RCALL SUBOPT_0x5
+	BRNE _0x9
+; 0000 005B { // mode tampilan
+; 0000 005C atur = 1;
+	RCALL SUBOPT_0x2
+; 0000 005D mode = 1;
 	LDI  R30,LOW(1)
 	LDI  R31,HIGH(1)
-	__PUTW1R 3,4
-; 0000 016F TIMSK1 |= (1 << OCIE1A); // 256
+	RCALL SUBOPT_0x3
+; 0000 005E start = 1;
+	RCALL SUBOPT_0x6
+; 0000 005F TIMSK1 |= (1 << OCIE1A);
 	LDS  R30,111
 	ORI  R30,2
 	STS  111,R30
-; 0000 0170 tampilanJam();
+; 0000 0060 tampilanJam();
 	RCALL _tampilanJam
-; 0000 0171 }
-; 0000 0172 else if (mode == 2)
-	RJMP _0xD5
-_0xD4:
-	RCALL SUBOPT_0x17
-	BRNE _0xD6
-; 0000 0173 { // mode timer
-; 0000 0174 atur = 1;
-	RCALL SUBOPT_0xD
-; 0000 0175 mode = 0;
-	CLR  R3
-	CLR  R4
-; 0000 0176 TIMSK1 &= ~(1 << OCIE1A);
+; 0000 0061 }
+; 0000 0062 else if (mode == 2)
+	RJMP _0xA
+_0x9:
+	RCALL SUBOPT_0x1
+	SBIW R26,2
+	BRNE _0xB
+; 0000 0063 { // mode timer
+; 0000 0064 atur = 1;
 	RCALL SUBOPT_0x2
-; 0000 0177 alarmTimer();
+; 0000 0065 mode = 0;
+	RCALL SUBOPT_0x7
+; 0000 0066 start = 0;
+	RCALL SUBOPT_0x4
+; 0000 0067 alarmTimer();
 	RCALL _alarmTimer
-; 0000 0178 }
-; 0000 0179 /*else if (mode == 0)
-; 0000 017A {           //mode mengatur
-; 0000 017B mode = 1;
-; 0000 017C TIMSK1 &= ~(1 << OCIE1A);
-; 0000 017D aturJam();
-; 0000 017E }  */
-; 0000 017F }
-_0xD6:
-_0xD5:
-_0xD3:
-	RJMP _0x17B
+; 0000 0068 }
+; 0000 0069 /*else if (mode == 0)
+; 0000 006A {           //mode mengatur
+; 0000 006B mode = 1;
+; 0000 006C TIMSK1 &= ~(1 << OCIE1A);
+; 0000 006D aturJam();
+; 0000 006E }  */
+; 0000 006F }
+_0xB:
+_0xA:
+_0x8:
+	RJMP _0x184
 ; .FEND
 ;interrupt[12] void timera_compa_isr(void)
-; 0000 0183 {
+; 0000 0073 {
 _timera_compa_isr:
 ; .FSTART _timera_compa_isr
 	ST   -Y,R0
@@ -2375,225 +1684,284 @@ _timera_compa_isr:
 	ST   -Y,R31
 	IN   R30,SREG
 	ST   -Y,R30
-; 0000 0184 if (mode == 1)
-	RCALL SUBOPT_0x16
-	BRNE _0xD7
-; 0000 0185 {
-; 0000 0186 // Check if 1 Second has Passed
-; 0000 0187 seconds_jam++;
-	RCALL SUBOPT_0x18
-; 0000 0188 
-; 0000 0189 // Check if 1 Minute has Passed
-; 0000 018A if (seconds_jam >= 60)
-	BRLT _0xD8
-; 0000 018B {
-; 0000 018C seconds_jam = 0;
-	CLR  R5
-	CLR  R6
-; 0000 018D minutes_jam++;
-	RCALL SUBOPT_0x5
-; 0000 018E }
-; 0000 018F if (minutes_jam >= 60)
-_0xD8:
-	RCALL SUBOPT_0x6
-	BRLT _0xD9
-; 0000 0190 {
-; 0000 0191 minutes_jam = 0;
-	CLR  R7
-	CLR  R8
-; 0000 0192 }
-; 0000 0193 // Update Digit Values
-; 0000 0194 digits[0] = minutes_jam / 10;
-_0xD9:
-	RCALL SUBOPT_0x7
+; 0000 0074 if (start == 1){
+	LDS  R26,_start
+	LDS  R27,_start+1
+	SBIW R26,1
+	BREQ PC+2
+	RJMP _0xC
+; 0000 0075 if (mode == 1)
+	RCALL SUBOPT_0x1
+	SBIW R26,1
+	BRNE _0xD
+; 0000 0076 {
+; 0000 0077 // Check if 1 Second has Passed
+; 0000 0078 seconds_jam++;
 	RCALL SUBOPT_0x8
-; 0000 0195 digits[1] = minutes_jam % 10;
-	RCALL SUBOPT_0x7
+; 0000 0079 
+; 0000 007A // Check if 1 Minute has Passed
+; 0000 007B if (seconds_jam >= 60)
+	BRLT _0xE
+; 0000 007C {
+; 0000 007D seconds_jam = 0;
 	RCALL SUBOPT_0x9
-; 0000 0196 digits[2] = seconds_jam / 10;
+; 0000 007E minutes_jam++;
+; 0000 007F }
+; 0000 0080 if (minutes_jam >= 60)
+_0xE:
 	RCALL SUBOPT_0xA
-	RCALL SUBOPT_0xB
-; 0000 0197 digits[3] = seconds_jam % 10;
-	__GETW2R 5,6
-	RJMP _0x17A
-; 0000 0198 }
-; 0000 0199 else if(mode == 0)
-_0xD7:
-	MOV  R0,R3
-	OR   R0,R4
-	BRNE _0xDB
-; 0000 019A {
-; 0000 019B // Check if 1 Second has Passed
-; 0000 019C seconds_timer--;
-	__GETW1R 9,10
-	SBIW R30,1
-	__PUTW1R 9,10
-; 0000 019D seconds_jam++;
-	RCALL SUBOPT_0x18
-; 0000 019E 
-; 0000 019F // Check if 1 Minute has Passed
-; 0000 01A0 if (seconds_jam >= 60)
-	BRLT _0xDC
-; 0000 01A1 {
-; 0000 01A2 seconds_jam = 0;
+	BRLT _0xF
+; 0000 0081 {
+; 0000 0082 minutes_jam = 0;
 	CLR  R5
 	CLR  R6
-; 0000 01A3 minutes_jam++;
+; 0000 0083 }
+; 0000 0084 // Update Digit Values
+; 0000 0085 digits[0] = minutes_jam / 10;
+_0xF:
+	RCALL SUBOPT_0xB
+	RCALL SUBOPT_0xC
+; 0000 0086 digits[1] = minutes_jam % 10;
+	RCALL SUBOPT_0xB
+	RCALL SUBOPT_0xD
+; 0000 0087 digits[2] = seconds_jam / 10;
+	RCALL SUBOPT_0xE
+; 0000 0088 digits[3] = seconds_jam % 10;
+	RJMP _0x17E
+; 0000 0089 }
+; 0000 008A else if(mode == 0)
+_0xD:
 	RCALL SUBOPT_0x5
-; 0000 01A4 }
-; 0000 01A5 if (minutes_jam >= 60)
-_0xDC:
-	RCALL SUBOPT_0x6
-	BRLT _0xDD
-; 0000 01A6 {
-; 0000 01A7 minutes_jam = 0;
-	CLR  R7
-	CLR  R8
-; 0000 01A8 }
-; 0000 01A9 
-; 0000 01AA // Check if 1 Minute has Passed
-; 0000 01AB if (seconds_timer == 0 && minutes_timer == 0)
-_0xDD:
+	BRNE _0x11
+; 0000 008B {
+; 0000 008C // Check if 1 Second has Passed
+; 0000 008D seconds_timer--;
+	__GETW1R 7,8
+	SBIW R30,1
+	__PUTW1R 7,8
+	ADIW R30,1
+; 0000 008E seconds_jam++;
+	RCALL SUBOPT_0xF
+; 0000 008F 
+; 0000 0090 // Check if 1 Minute has Passed
+; 0000 0091 if (seconds_jam >= 60)
+	BRLT _0x12
+; 0000 0092 {
+; 0000 0093 seconds_jam = 0;
+	RCALL SUBOPT_0x9
+; 0000 0094 minutes_jam++;
+; 0000 0095 }
+; 0000 0096 if (minutes_jam >= 60)
+_0x12:
+	RCALL SUBOPT_0xA
+	BRLT _0x13
+; 0000 0097 {
+; 0000 0098 minutes_jam = 0;
+	CLR  R5
+	CLR  R6
+; 0000 0099 }
+; 0000 009A 
+; 0000 009B // Check if 1 Minute has Passed
+; 0000 009C if (seconds_timer == 0 && minutes_timer == 0)
+_0x13:
+	CLR  R0
+	CP   R0,R7
+	CPC  R0,R8
+	BRNE _0x15
 	CLR  R0
 	CP   R0,R9
 	CPC  R0,R10
-	BRNE _0xDF
-	CLR  R0
-	CP   R0,R11
-	CPC  R0,R12
-	BREQ _0xE0
-_0xDF:
-	RJMP _0xDE
-_0xE0:
-; 0000 01AC { // timer sudah mencapai 0
-; 0000 01AD TIMSK1 &= ~(1 << OCIE1A);
-	RCALL SUBOPT_0x2
-; 0000 01AE }
-; 0000 01AF if (seconds_timer <= -1)
-_0xDE:
+	BREQ _0x16
+_0x15:
+	RJMP _0x14
+_0x16:
+; 0000 009D { // timer sudah mencapai 0
+; 0000 009E PIN_BUZZ = 1;
+	SBI  0x8,2
+; 0000 009F start = 0;
+	RCALL SUBOPT_0x4
+; 0000 00A0 }
+; 0000 00A1 if (seconds_timer <= -1)
+_0x14:
+	LDI  R30,LOW(65535)
+	LDI  R31,HIGH(65535)
+	CP   R30,R7
+	CPC  R31,R8
+	BRLT _0x19
+; 0000 00A2 {
+; 0000 00A3 seconds_timer = 59;
+	LDI  R30,LOW(59)
+	LDI  R31,HIGH(59)
+	__PUTW1R 7,8
+; 0000 00A4 minutes_timer--;
+	__GETW1R 9,10
+	SBIW R30,1
+	__PUTW1R 9,10
+; 0000 00A5 }
+; 0000 00A6 if (minutes_timer <= -1)
+_0x19:
 	LDI  R30,LOW(65535)
 	LDI  R31,HIGH(65535)
 	CP   R30,R9
 	CPC  R31,R10
-	BRLT _0xE1
-; 0000 01B0 {
-; 0000 01B1 seconds_timer = 59;
-	LDI  R30,LOW(59)
-	LDI  R31,HIGH(59)
-	__PUTW1R 9,10
-; 0000 01B2 minutes_timer--;
-	__GETW1R 11,12
-	SBIW R30,1
-	__PUTW1R 11,12
-; 0000 01B3 }
-; 0000 01B4 if (minutes_timer <= -1)
-_0xE1:
-	LDI  R30,LOW(65535)
-	LDI  R31,HIGH(65535)
-	CP   R30,R11
-	CPC  R31,R12
-	BRLT _0xE2
-; 0000 01B5 {
-; 0000 01B6 minutes_timer = 0;
+	BRLT _0x1A
+; 0000 00A7 {
+; 0000 00A8 minutes_timer = 0;
+	CLR  R9
+	CLR  R10
+; 0000 00A9 }
+; 0000 00AA // Update Digit Values
+; 0000 00AB digits[0] = minutes_timer / 10;
+_0x1A:
+	RCALL SUBOPT_0x10
+	RCALL SUBOPT_0xC
+; 0000 00AC digits[1] = minutes_timer % 10;
+	RCALL SUBOPT_0x10
+	RCALL SUBOPT_0xD
+; 0000 00AD digits[2] = seconds_timer / 10;
+	RCALL SUBOPT_0x11
+; 0000 00AE digits[3] = seconds_timer % 10;
+	RJMP _0x17E
+; 0000 00AF }
+; 0000 00B0 else if (mode == 2)
+_0x11:
+	RCALL SUBOPT_0x1
+	SBIW R26,2
+	BRNE _0x1C
+; 0000 00B1 {
+; 0000 00B2 // Check if 1 Second has Passed
+; 0000 00B3 seconds_stopwatch++;
+	LDI  R30,LOW(1)
+	LDI  R31,HIGH(1)
+	__ADDWRR 11,12,30,31
+; 0000 00B4 seconds_jam++;
+	RCALL SUBOPT_0x8
+; 0000 00B5 
+; 0000 00B6 // Check if 1 Minute has Passed
+; 0000 00B7 if (seconds_jam >= 60)
+	BRLT _0x1D
+; 0000 00B8 {
+; 0000 00B9 seconds_jam = 0;
+	RCALL SUBOPT_0x9
+; 0000 00BA minutes_jam++;
+; 0000 00BB }
+; 0000 00BC if (minutes_jam >= 60)
+_0x1D:
+	RCALL SUBOPT_0xA
+	BRLT _0x1E
+; 0000 00BD {
+; 0000 00BE minutes_jam = 0;
+	CLR  R5
+	CLR  R6
+; 0000 00BF }
+; 0000 00C0 // Check if 1 Minute has Passed
+; 0000 00C1 if (seconds_stopwatch >= 60)
+_0x1E:
+	LDI  R30,LOW(60)
+	LDI  R31,HIGH(60)
+	CP   R11,R30
+	CPC  R12,R31
+	BRLT _0x1F
+; 0000 00C2 {
+; 0000 00C3 seconds_stopwatch = 0;
 	CLR  R11
 	CLR  R12
-; 0000 01B7 }
-; 0000 01B8 // Update Digit Values
-; 0000 01B9 digits[0] = minutes_timer / 10;
-_0xE2:
-	RCALL SUBOPT_0x13
-	RCALL SUBOPT_0x8
-; 0000 01BA digits[1] = minutes_timer % 10;
-	RCALL SUBOPT_0x13
-	RCALL SUBOPT_0x9
-; 0000 01BB digits[2] = seconds_timer / 10;
-	RCALL SUBOPT_0x14
-	RCALL SUBOPT_0xB
-; 0000 01BC digits[3] = seconds_timer % 10;
-	__GETW2R 9,10
-	RJMP _0x17A
-; 0000 01BD }
-; 0000 01BE else if (mode == 2)
-_0xDB:
-	RCALL SUBOPT_0x17
-	BRNE _0xE4
-; 0000 01BF {
-; 0000 01C0 // Check if 1 Second has Passed
-; 0000 01C1 seconds_stopwatch++;
+; 0000 00C4 minutes_stopwatch++;
 	LDI  R30,LOW(1)
 	LDI  R31,HIGH(1)
 	__ADDWRR 13,14,30,31
-; 0000 01C2 seconds_jam++;
-	RCALL SUBOPT_0x18
-; 0000 01C3 
-; 0000 01C4 // Check if 1 Minute has Passed
-; 0000 01C5 if (seconds_jam >= 60)
-	BRLT _0xE5
-; 0000 01C6 {
-; 0000 01C7 seconds_jam = 0;
-	CLR  R5
-	CLR  R6
-; 0000 01C8 minutes_jam++;
-	RCALL SUBOPT_0x5
-; 0000 01C9 }
-; 0000 01CA if (minutes_jam >= 60)
-_0xE5:
-	RCALL SUBOPT_0x6
-	BRLT _0xE6
-; 0000 01CB {
-; 0000 01CC minutes_jam = 0;
-	CLR  R7
-	CLR  R8
-; 0000 01CD }
-; 0000 01CE // Check if 1 Minute has Passed
-; 0000 01CF if (seconds_stopwatch >= 60)
-_0xE6:
+; 0000 00C5 }
+; 0000 00C6 if (minutes_stopwatch >= 60)
+_0x1F:
 	LDI  R30,LOW(60)
 	LDI  R31,HIGH(60)
 	CP   R13,R30
 	CPC  R14,R31
-	BRLT _0xE7
-; 0000 01D0 {
-; 0000 01D1 seconds_stopwatch = 0;
+	BRLT _0x20
+; 0000 00C7 {
+; 0000 00C8 minutes_stopwatch = 00;
 	CLR  R13
 	CLR  R14
-; 0000 01D2 minutes_stopwatch++;
-	LDI  R26,LOW(_minutes_stopwatch)
-	LDI  R27,HIGH(_minutes_stopwatch)
-	RCALL SUBOPT_0x19
-; 0000 01D3 }
-; 0000 01D4 if (minutes_stopwatch >= 60)
-_0xE7:
-	LDS  R26,_minutes_stopwatch
-	LDS  R27,_minutes_stopwatch+1
-	SBIW R26,60
-	BRLT _0xE8
-; 0000 01D5 {
-; 0000 01D6 minutes_stopwatch = 00;
-	LDI  R30,LOW(0)
-	STS  _minutes_stopwatch,R30
-	STS  _minutes_stopwatch+1,R30
-; 0000 01D7 }
-; 0000 01D8 // Update Digit Values
-; 0000 01D9 digits[0] = minutes_stopwatch / 10;
-_0xE8:
-	RCALL SUBOPT_0x11
-	RCALL SUBOPT_0x8
-; 0000 01DA digits[1] = minutes_stopwatch % 10;
-	RCALL SUBOPT_0x11
-	RCALL SUBOPT_0x9
-; 0000 01DB digits[2] = seconds_stopwatch / 10;
+; 0000 00C9 }
+; 0000 00CA // Update Digit Values
+; 0000 00CB digits[0] = minutes_stopwatch / 10;
+_0x20:
 	RCALL SUBOPT_0x12
-	RCALL SUBOPT_0xB
-; 0000 01DC digits[3] = seconds_stopwatch % 10;
-	__GETW2R 13,14
-_0x17A:
+	RCALL SUBOPT_0xC
+; 0000 00CC digits[1] = minutes_stopwatch % 10;
+	RCALL SUBOPT_0x12
+	RCALL SUBOPT_0xD
+; 0000 00CD digits[2] = seconds_stopwatch / 10;
+	RCALL SUBOPT_0x13
+; 0000 00CE digits[3] = seconds_stopwatch % 10;
+_0x17E:
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
+	RCALL SUBOPT_0x14
+; 0000 00CF }
+; 0000 00D0 } else{
+_0x1C:
+	RJMP _0x21
+_0xC:
+; 0000 00D1 seconds_jam++;
+	RCALL SUBOPT_0x8
+; 0000 00D2 
+; 0000 00D3 // Check if 1 Minute has Passed
+; 0000 00D4 if (seconds_jam >= 60)
+	BRLT _0x22
+; 0000 00D5 {
+; 0000 00D6 seconds_jam = 0;
+	RCALL SUBOPT_0x9
+; 0000 00D7 minutes_jam++;
+; 0000 00D8 }
+; 0000 00D9 if (minutes_jam >= 60)
+_0x22:
+	RCALL SUBOPT_0xA
+	BRLT _0x23
+; 0000 00DA {
+; 0000 00DB minutes_jam = 0;
+	CLR  R5
+	CLR  R6
+; 0000 00DC }
+; 0000 00DD if (mode == 2){
+_0x23:
+	RCALL SUBOPT_0x1
+	SBIW R26,2
+	BRNE _0x24
+; 0000 00DE digits[0] = minutes_stopwatch / 10;
+	RCALL SUBOPT_0x12
 	RCALL SUBOPT_0xC
-; 0000 01DD }
-; 0000 01DE }
-_0xE4:
+; 0000 00DF digits[1] = minutes_stopwatch % 10;
+	RCALL SUBOPT_0x12
+	RCALL SUBOPT_0xD
+; 0000 00E0 digits[2] = seconds_stopwatch / 10;
+	RCALL SUBOPT_0x13
+; 0000 00E1 digits[3] = seconds_stopwatch % 10;
+	RJMP _0x17F
+; 0000 00E2 }
+; 0000 00E3 else if(mode == 1) {
+_0x24:
+	RCALL SUBOPT_0x1
+	SBIW R26,1
+	BRNE _0x26
+; 0000 00E4 digits[0] = minutes_timer / 10;
+	RCALL SUBOPT_0x10
+	RCALL SUBOPT_0xC
+; 0000 00E5 digits[1] = minutes_timer % 10;
+	RCALL SUBOPT_0x10
+	RCALL SUBOPT_0xD
+; 0000 00E6 digits[2] = seconds_timer / 10;
+	RCALL SUBOPT_0x11
+; 0000 00E7 digits[3] = seconds_timer % 10;
+_0x17F:
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RCALL SUBOPT_0x14
+; 0000 00E8 }
+; 0000 00E9 }
+_0x26:
+_0x21:
+; 0000 00EA }
 	LD   R30,Y+
 	OUT  SREG,R30
 	LD   R31,Y+
@@ -2606,13 +1974,13 @@ _0xE4:
 	RETI
 ; .FEND
 ;interrupt[17] void timer0_ovf_isr(void)
-; 0000 01E2 {
+; 0000 00EE {
 _timer0_ovf_isr:
 ; .FSTART _timer0_ovf_isr
+	RCALL SUBOPT_0x0
+; 0000 00EF // Update Segment Values for Current Digit
+; 0000 00F0 SevenSegment(digits[digit_index]);
 	RCALL SUBOPT_0x15
-; 0000 01E3 // Update Segment Values for Current Digit
-; 0000 01E4 SevenSegment(digits[digit_index]);
-	RCALL SUBOPT_0x1A
 	LDI  R26,LOW(_digits)
 	LDI  R27,HIGH(_digits)
 	LSL  R30
@@ -2623,247 +1991,251 @@ _timer0_ovf_isr:
 	LD   R31,X+
 	MOVW R26,R30
 	RCALL _SevenSegment
-; 0000 01E5 
-; 0000 01E6 // Enable Multiplexing for Current Digit
-; 0000 01E7 // Elif for choose seven SevenSegmen
-; 0000 01E8 if (atur == 1)
+; 0000 00F1 
+; 0000 00F2 // Enable Multiplexing for Current Digit
+; 0000 00F3 // Elif for choose seven SevenSegmen
+; 0000 00F4 if (atur == 1)
 	LDS  R26,_atur
 	LDS  R27,_atur+1
 	SBIW R26,1
-	BRNE _0xE9
-; 0000 01E9 {
-; 0000 01EA if (digit_index == 0)
-	RCALL SUBOPT_0x1A
+	BRNE _0x27
+; 0000 00F5 {
+; 0000 00F6 if (digit_index == 0)
+	RCALL SUBOPT_0x15
 	SBIW R30,0
-	BRNE _0xEA
-; 0000 01EB {
-; 0000 01EC DIGIT_1 = 1;
-	RCALL SUBOPT_0x1B
-; 0000 01ED DIGIT_2 = 0;
-; 0000 01EE DIGIT_3 = 0;
-; 0000 01EF DIGIT_4 = 0;
-; 0000 01F0 }
-; 0000 01F1 else if (digit_index == 1)
-	RJMP _0xF3
-_0xEA:
-	RCALL SUBOPT_0x1C
+	BRNE _0x28
+; 0000 00F7 {
+; 0000 00F8 DIGIT_1 = 1;
+	RCALL SUBOPT_0x16
+; 0000 00F9 DIGIT_2 = 0;
+; 0000 00FA DIGIT_3 = 0;
+; 0000 00FB DIGIT_4 = 0;
+; 0000 00FC }
+; 0000 00FD else if (digit_index == 1)
+	RJMP _0x31
+_0x28:
+	RCALL SUBOPT_0x17
 	SBIW R26,1
-	BRNE _0xF4
-; 0000 01F2 {
-; 0000 01F3 DIGIT_1 = 0;
-	RCALL SUBOPT_0x1D
-; 0000 01F4 DIGIT_2 = 1;
-; 0000 01F5 DIGIT_3 = 0;
-; 0000 01F6 DIGIT_4 = 0;
-; 0000 01F7 }
-; 0000 01F8 else if (digit_index == 2)
-	RJMP _0xFD
-_0xF4:
-	RCALL SUBOPT_0x1C
+	BRNE _0x32
+; 0000 00FE {
+; 0000 00FF DIGIT_1 = 0;
+	RCALL SUBOPT_0x18
+; 0000 0100 DIGIT_2 = 1;
+; 0000 0101 DIGIT_3 = 0;
+; 0000 0102 DIGIT_4 = 0;
+; 0000 0103 }
+; 0000 0104 else if (digit_index == 2)
+	RJMP _0x3B
+_0x32:
+	RCALL SUBOPT_0x17
 	SBIW R26,2
-	BRNE _0xFE
-; 0000 01F9 {
-; 0000 01FA DIGIT_1 = 0;
-	RCALL SUBOPT_0x1E
-; 0000 01FB DIGIT_2 = 0;
-; 0000 01FC DIGIT_3 = 1;
-; 0000 01FD DIGIT_4 = 0;
-; 0000 01FE }
-; 0000 01FF else if (digit_index == 3)
-	RJMP _0x107
-_0xFE:
-	RCALL SUBOPT_0x1C
+	BRNE _0x3C
+; 0000 0105 {
+; 0000 0106 DIGIT_1 = 0;
+	RCALL SUBOPT_0x19
+; 0000 0107 DIGIT_2 = 0;
+; 0000 0108 DIGIT_3 = 1;
+; 0000 0109 DIGIT_4 = 0;
+; 0000 010A }
+; 0000 010B else if (digit_index == 3)
+	RJMP _0x45
+_0x3C:
+	RCALL SUBOPT_0x17
 	SBIW R26,3
-	BRNE _0x108
-; 0000 0200 {
-; 0000 0201 DIGIT_1 = 0;
-	RCALL SUBOPT_0x1F
-; 0000 0202 DIGIT_2 = 0;
-; 0000 0203 DIGIT_3 = 0;
-; 0000 0204 DIGIT_4 = 1;
-; 0000 0205 }
-; 0000 0206 }
-_0x108:
-_0x107:
-_0xFD:
-_0xF3:
-; 0000 0207 else
-	RJMP _0x111
-_0xE9:
-; 0000 0208 {
-; 0000 0209 if (digit_index == 0 && geser == 1)
-	RCALL SUBOPT_0x1C
+	BRNE _0x46
+; 0000 010C {
+; 0000 010D DIGIT_1 = 0;
+	RCALL SUBOPT_0x1A
+; 0000 010E DIGIT_2 = 0;
+; 0000 010F DIGIT_3 = 0;
+; 0000 0110 DIGIT_4 = 1;
+; 0000 0111 }
+; 0000 0112 }
+_0x46:
+_0x45:
+_0x3B:
+_0x31:
+; 0000 0113 else
+	RJMP _0x4F
+_0x27:
+; 0000 0114 {
+; 0000 0115 if (digit_index == 0 && geser == 1)
+	RCALL SUBOPT_0x17
 	SBIW R26,0
-	BRNE _0x113
-	RCALL SUBOPT_0x20
-	BREQ _0x114
-_0x113:
-	RJMP _0x112
-_0x114:
-; 0000 020A {
-; 0000 020B DIGIT_1 = 1;
+	BRNE _0x51
 	RCALL SUBOPT_0x1B
-; 0000 020C DIGIT_2 = 0;
-; 0000 020D DIGIT_3 = 0;
-; 0000 020E DIGIT_4 = 0;
-; 0000 020F }
-; 0000 0210 else if (digit_index == 1 && geser == 1)
-	RJMP _0x11D
-_0x112:
-	RCALL SUBOPT_0x1C
+	BREQ _0x52
+_0x51:
+	RJMP _0x50
+_0x52:
+; 0000 0116 {
+; 0000 0117 DIGIT_1 = 1;
+	RCALL SUBOPT_0x16
+; 0000 0118 DIGIT_2 = 0;
+; 0000 0119 DIGIT_3 = 0;
+; 0000 011A DIGIT_4 = 0;
+; 0000 011B }
+; 0000 011C else if (digit_index == 1 && geser == 1)
+	RJMP _0x5B
+_0x50:
+	RCALL SUBOPT_0x17
 	SBIW R26,1
-	BRNE _0x11F
-	RCALL SUBOPT_0x20
-	BREQ _0x120
-_0x11F:
-	RJMP _0x11E
-_0x120:
-; 0000 0211 {
-; 0000 0212 DIGIT_1 = 0;
-	RCALL SUBOPT_0x1D
-; 0000 0213 DIGIT_2 = 1;
-; 0000 0214 DIGIT_3 = 0;
-; 0000 0215 DIGIT_4 = 0;
-; 0000 0216 }
-; 0000 0217 else if (digit_index == 2 && geser == 1)
-	RJMP _0x129
-_0x11E:
-	RCALL SUBOPT_0x1C
+	BRNE _0x5D
+	RCALL SUBOPT_0x1B
+	BREQ _0x5E
+_0x5D:
+	RJMP _0x5C
+_0x5E:
+; 0000 011D {
+; 0000 011E DIGIT_1 = 0;
+	RCALL SUBOPT_0x18
+; 0000 011F DIGIT_2 = 1;
+; 0000 0120 DIGIT_3 = 0;
+; 0000 0121 DIGIT_4 = 0;
+; 0000 0122 }
+; 0000 0123 else if (digit_index == 2 && geser == 1)
+	RJMP _0x67
+_0x5C:
+	RCALL SUBOPT_0x17
 	SBIW R26,2
-	BRNE _0x12B
-	RCALL SUBOPT_0x20
-	BREQ _0x12C
-_0x12B:
-	RJMP _0x12A
-_0x12C:
-; 0000 0218 {
-; 0000 0219 DIGIT_1 = 0;
-	RCALL SUBOPT_0x21
-; 0000 021A DIGIT_2 = 0;
-; 0000 021B DIGIT_3 = 0;
-; 0000 021C DIGIT_4 = 0;
-; 0000 021D }
-; 0000 021E else if (digit_index == 3 && geser == 1)
-	RJMP _0x135
-_0x12A:
+	BRNE _0x69
+	RCALL SUBOPT_0x1B
+	BREQ _0x6A
+_0x69:
+	RJMP _0x68
+_0x6A:
+; 0000 0124 {
+; 0000 0125 DIGIT_1 = 0;
 	RCALL SUBOPT_0x1C
+; 0000 0126 DIGIT_2 = 0;
+; 0000 0127 DIGIT_3 = 0;
+; 0000 0128 DIGIT_4 = 0;
+; 0000 0129 }
+; 0000 012A else if (digit_index == 3 && geser == 1)
+	RJMP _0x73
+_0x68:
+	RCALL SUBOPT_0x17
 	SBIW R26,3
-	BRNE _0x137
-	RCALL SUBOPT_0x20
-	BREQ _0x138
-_0x137:
-	RJMP _0x136
-_0x138:
-; 0000 021F {
-; 0000 0220 DIGIT_1 = 0;
-	RCALL SUBOPT_0x21
-; 0000 0221 DIGIT_2 = 0;
-; 0000 0222 DIGIT_3 = 0;
-; 0000 0223 DIGIT_4 = 0;
-; 0000 0224 }
-; 0000 0225 else if (digit_index == 0 && geser == 0)
-	RJMP _0x141
-_0x136:
+	BRNE _0x75
+	RCALL SUBOPT_0x1B
+	BREQ _0x76
+_0x75:
+	RJMP _0x74
+_0x76:
+; 0000 012B {
+; 0000 012C DIGIT_1 = 0;
 	RCALL SUBOPT_0x1C
+; 0000 012D DIGIT_2 = 0;
+; 0000 012E DIGIT_3 = 0;
+; 0000 012F DIGIT_4 = 0;
+; 0000 0130 }
+; 0000 0131 else if (digit_index == 0 && geser == 0)
+	RJMP _0x7F
+_0x74:
+	RCALL SUBOPT_0x17
 	SBIW R26,0
-	BRNE _0x143
-	RCALL SUBOPT_0x22
-	BREQ _0x144
-_0x143:
-	RJMP _0x142
-_0x144:
-; 0000 0226 {
-; 0000 0227 DIGIT_1 = 0;
-	RCALL SUBOPT_0x21
-; 0000 0228 DIGIT_2 = 0;
-; 0000 0229 DIGIT_3 = 0;
-; 0000 022A DIGIT_4 = 0;
-; 0000 022B }
-; 0000 022C else if (digit_index == 1 && geser == 0)
-	RJMP _0x14D
-_0x142:
+	BRNE _0x81
+	RCALL SUBOPT_0x1D
+	BREQ _0x82
+_0x81:
+	RJMP _0x80
+_0x82:
+; 0000 0132 {
+; 0000 0133 DIGIT_1 = 0;
 	RCALL SUBOPT_0x1C
+; 0000 0134 DIGIT_2 = 0;
+; 0000 0135 DIGIT_3 = 0;
+; 0000 0136 DIGIT_4 = 0;
+; 0000 0137 }
+; 0000 0138 else if (digit_index == 1 && geser == 0)
+	RJMP _0x8B
+_0x80:
+	RCALL SUBOPT_0x17
 	SBIW R26,1
-	BRNE _0x14F
-	RCALL SUBOPT_0x22
-	BREQ _0x150
-_0x14F:
-	RJMP _0x14E
-_0x150:
-; 0000 022D {
-; 0000 022E DIGIT_1 = 0;
-	RCALL SUBOPT_0x21
-; 0000 022F DIGIT_2 = 0;
-; 0000 0230 DIGIT_3 = 0;
-; 0000 0231 DIGIT_4 = 0;
-; 0000 0232 }
-; 0000 0233 else if (digit_index == 2 && geser == 0)
-	RJMP _0x159
-_0x14E:
+	BRNE _0x8D
+	RCALL SUBOPT_0x1D
+	BREQ _0x8E
+_0x8D:
+	RJMP _0x8C
+_0x8E:
+; 0000 0139 {
+; 0000 013A DIGIT_1 = 0;
 	RCALL SUBOPT_0x1C
+; 0000 013B DIGIT_2 = 0;
+; 0000 013C DIGIT_3 = 0;
+; 0000 013D DIGIT_4 = 0;
+; 0000 013E }
+; 0000 013F else if (digit_index == 2 && geser == 0)
+	RJMP _0x97
+_0x8C:
+	RCALL SUBOPT_0x17
 	SBIW R26,2
-	BRNE _0x15B
-	RCALL SUBOPT_0x22
-	BREQ _0x15C
-_0x15B:
-	RJMP _0x15A
-_0x15C:
-; 0000 0234 {
-; 0000 0235 DIGIT_1 = 0;
-	RCALL SUBOPT_0x1E
-; 0000 0236 DIGIT_2 = 0;
-; 0000 0237 DIGIT_3 = 1;
-; 0000 0238 DIGIT_4 = 0;
-; 0000 0239 }
-; 0000 023A else if (digit_index == 3 && geser == 0)
-	RJMP _0x165
-_0x15A:
-	RCALL SUBOPT_0x1C
+	BRNE _0x99
+	RCALL SUBOPT_0x1D
+	BREQ _0x9A
+_0x99:
+	RJMP _0x98
+_0x9A:
+; 0000 0140 {
+; 0000 0141 DIGIT_1 = 0;
+	RCALL SUBOPT_0x19
+; 0000 0142 DIGIT_2 = 0;
+; 0000 0143 DIGIT_3 = 1;
+; 0000 0144 DIGIT_4 = 0;
+; 0000 0145 }
+; 0000 0146 else if (digit_index == 3 && geser == 0)
+	RJMP _0xA3
+_0x98:
+	RCALL SUBOPT_0x17
 	SBIW R26,3
-	BRNE _0x167
-	RCALL SUBOPT_0x22
-	BREQ _0x168
-_0x167:
-	RJMP _0x166
-_0x168:
-; 0000 023B {
-; 0000 023C DIGIT_1 = 0;
-	RCALL SUBOPT_0x1F
-; 0000 023D DIGIT_2 = 0;
-; 0000 023E DIGIT_3 = 0;
-; 0000 023F DIGIT_4 = 1;
-; 0000 0240 }
-; 0000 0241 }
-_0x166:
-_0x165:
-_0x159:
-_0x14D:
-_0x141:
-_0x135:
-_0x129:
-_0x11D:
-_0x111:
-; 0000 0242 
-; 0000 0243 // Increment Digit Index
-; 0000 0244 digit_index++;
+	BRNE _0xA5
+	RCALL SUBOPT_0x1D
+	BREQ _0xA6
+_0xA5:
+	RJMP _0xA4
+_0xA6:
+; 0000 0147 {
+; 0000 0148 DIGIT_1 = 0;
+	RCALL SUBOPT_0x1A
+; 0000 0149 DIGIT_2 = 0;
+; 0000 014A DIGIT_3 = 0;
+; 0000 014B DIGIT_4 = 1;
+; 0000 014C }
+; 0000 014D }
+_0xA4:
+_0xA3:
+_0x97:
+_0x8B:
+_0x7F:
+_0x73:
+_0x67:
+_0x5B:
+_0x4F:
+; 0000 014E 
+; 0000 014F // Increment Digit Index
+; 0000 0150 digit_index++;
 	LDI  R26,LOW(_digit_index)
 	LDI  R27,HIGH(_digit_index)
-	RCALL SUBOPT_0x19
-; 0000 0245 
-; 0000 0246 // Wrap Around Digit Index
-; 0000 0247 if (digit_index >= 4)
-	RCALL SUBOPT_0x1C
+	LD   R30,X+
+	LD   R31,X+
+	ADIW R30,1
+	ST   -X,R31
+	ST   -X,R30
+; 0000 0151 
+; 0000 0152 // Wrap Around Digit Index
+; 0000 0153 if (digit_index >= 4)
+	RCALL SUBOPT_0x17
 	SBIW R26,4
-	BRLT _0x171
-; 0000 0248 {
-; 0000 0249 digit_index = 0;
+	BRLT _0xAF
+; 0000 0154 {
+; 0000 0155 digit_index = 0;
 	LDI  R30,LOW(0)
 	STS  _digit_index,R30
 	STS  _digit_index+1,R30
-; 0000 024A }
-; 0000 024B }
-_0x171:
-_0x17B:
+; 0000 0156 }
+; 0000 0157 }
+_0xAF:
+_0x184:
 	LD   R30,Y+
 	OUT  SREG,R30
 	LD   R31,Y+
@@ -2880,86 +2252,740 @@ _0x17B:
 	RETI
 ; .FEND
 ;void main(void)
-; 0000 024E {
+; 0000 015C {
 _main:
 ; .FSTART _main
-; 0000 024F // Initialize Timer1
-; 0000 0250 // set prescaler 1024
-; 0000 0251 init_int1();
+; 0000 015D // Initialize Timer1
+; 0000 015E // set prescaler 1024
+; 0000 015F init_int1();
 	RCALL _init_int1
-; 0000 0252 init_int2();
+; 0000 0160 init_int2();
 	RCALL _init_int2
-; 0000 0253 init_buttonA();
+; 0000 0161 init_buttonA();
 	RCALL _init_buttonA
-; 0000 0254 
-; 0000 0255 // Enable Interrupts
-; 0000 0256 #asm("sei")
+; 0000 0162 
+; 0000 0163 // Enable Interrupts
+; 0000 0164 #asm("sei")
 	SEI
-; 0000 0257 
-; 0000 0258 // Set Seven Segment Pins as Output
-; 0000 0259 DDRB = 0b111111;
+; 0000 0165 
+; 0000 0166 // Set Seven Segment Pins as Output
+; 0000 0167 DDRB = 0b111111;
 	LDI  R30,LOW(63)
 	OUT  0x4,R30
-; 0000 025A DDRD &= ~(1 << DDD3);
+; 0000 0168 DDRD &= ~(1 << DDD3);
 	CBI  0xA,3
-; 0000 025B DDRD |= (1 << DDD2) | (1 << DDD4) | (1 << DDD5) | (1 << DDD6) | (1 << DDD7);
+; 0000 0169 DDRD |= (1 << DDD2) | (1 << DDD4) | (1 << DDD5) | (1 << DDD6) | (1 << DDD7);
 	IN   R30,0xA
 	ORI  R30,LOW(0xF4)
 	OUT  0xA,R30
-; 0000 025C DDRC |= (1 << DDC0) | (1 << DDC1);
+; 0000 016A DDRC |= (1 << DDC0) | (1 << DDC1);
 	IN   R30,0x7
 	ORI  R30,LOW(0x3)
 	OUT  0x7,R30
-; 0000 025D DDRC &= ~(1 << DDD5) & ~(1 << DDD4) & ~(1 << DDD3);
+; 0000 016B DDRC &= ~(1 << DDD5) & ~(1 << DDD4) & ~(1 << DDD3);
 	IN   R30,0x7
 	ANDI R30,LOW(0xC7)
 	OUT  0x7,R30
-; 0000 025E PORTD |= (1 << BUTTON_A) | (1 << BUTTON_B) | (1 << BUTTON_C) | (1 << BUTTON_D);
+; 0000 016C PORTD |= (1 << BUTTON_A) | (1 << BUTTON_B) | (1 << BUTTON_C) | (1 << BUTTON_D);
 	IN   R22,11
 	LDI  R30,0
-	SBIC 0x9,3
+	SBIC 0x9,0
 	LDI  R30,1
 	LDI  R26,LOW(1)
 	RCALL __LSLB12
 	MOV  R1,R30
 	LDI  R30,0
-	SBIC 0x6,5
+	SBIC 0x9,1
 	LDI  R30,1
 	RCALL __LSLB12
 	OR   R1,R30
 	LDI  R30,0
-	SBIC 0x6,4
+	SBIC 0x9,2
 	LDI  R30,1
 	RCALL __LSLB12
 	OR   R1,R30
 	LDI  R30,0
-	SBIC 0x6,3
+	SBIC 0x9,3
 	LDI  R30,1
 	RCALL __LSLB12
 	OR   R30,R1
 	OR   R30,R22
 	OUT  0xB,R30
-; 0000 025F 
-; 0000 0260 TIMSK1 &= ~(1 << OCIE1A);
-	RCALL SUBOPT_0x2
-; 0000 0261 mode = 0;
+; 0000 016D 
+; 0000 016E TIMSK1 &= ~(1 << OCIE1A);
+	RCALL SUBOPT_0x1E
+; 0000 016F mode = 0;
+	RCALL SUBOPT_0x7
+; 0000 0170 aturJam();
+	RCALL _aturJam
+; 0000 0171 while (1)
+_0xB0:
+; 0000 0172 {
+; 0000 0173 }
+	RJMP _0xB0
+; 0000 0174 }
+_0xB3:
+	RJMP _0xB3
+; .FEND
+;void init_int1(void)
+; 0000 0178 {                        // 1s
+_init_int1:
+; .FSTART _init_int1
+; 0000 0179 TCCR1A = (1 << WGM12); // ctc
+	LDI  R30,LOW(8)
+	STS  128,R30
+; 0000 017A TCCR1B = (1 << CS12);  // 256
+	LDI  R30,LOW(4)
+	STS  129,R30
+; 0000 017B TCNT1H = 0;
+	LDI  R30,LOW(0)
+	STS  133,R30
+; 0000 017C TCNT1L = 0;
+	STS  132,R30
+; 0000 017D OCR1AH = 0xF4;
+	LDI  R30,LOW(244)
+	STS  137,R30
+; 0000 017E OCR1AL = 0x24;
+	LDI  R30,LOW(36)
+	STS  136,R30
+; 0000 017F TIMSK1 = 0b00000010;
+	LDI  R30,LOW(2)
+	STS  111,R30
+; 0000 0180 }
+	RET
+; .FEND
+;void init_int2(void)
+; 0000 0183 { // 1ms
+_init_int2:
+; .FSTART _init_int2
+; 0000 0184 TIMSK0 = 0b00000001;
+	LDI  R30,LOW(1)
+	STS  110,R30
+; 0000 0185 TCCR0B = (1 << CS02); // 256
+	LDI  R30,LOW(4)
+	OUT  0x25,R30
+; 0000 0186 TCNT0 = 0x83;
+	LDI  R30,LOW(131)
+	OUT  0x26,R30
+; 0000 0187 }
+	RET
+; .FEND
+;void init_buttonA(void)
+; 0000 018A {
+_init_buttonA:
+; .FSTART _init_buttonA
+; 0000 018B // SET FALLING EDGE PADA INT1
+; 0000 018C EICRA = (1 << ISC11) | (0 << ISC10) | (0 << ISC01) | (0 << ISC00);
+	LDI  R30,LOW(8)
+	STS  105,R30
+; 0000 018D // ENABLE INT1
+; 0000 018E EIMSK = (1 << INT1) | (0 << INT0);
+	LDI  R30,LOW(2)
+	OUT  0x1D,R30
+; 0000 018F }
+	RET
+; .FEND
+;void SevenSegment(int num)
+; 0000 0192 {
+_SevenSegment:
+; .FSTART _SevenSegment
+; 0000 0193 // Elif for number modifier Seven Segments
+; 0000 0194 if (num == 0)
+	ST   -Y,R17
+	ST   -Y,R16
+	MOVW R16,R26
+;	num -> R16,R17
+	MOV  R0,R16
+	OR   R0,R17
+	BRNE _0xB4
+; 0000 0195 {
+; 0000 0196 SEG_A = 0;
+	RCALL SUBOPT_0x1F
+; 0000 0197 SEG_B = 0;
+; 0000 0198 SEG_C = 0;
+; 0000 0199 SEG_D = 0;
+; 0000 019A SEG_E = 0;
+	CBI  0x5,0
+; 0000 019B SEG_F = 0;
+	CBI  0x5,1
+; 0000 019C SEG_G = 1;
+	SBI  0x5,2
+; 0000 019D }
+; 0000 019E else if (num == 1)
+	RJMP _0xC3
+_0xB4:
+	LDI  R30,LOW(1)
+	LDI  R31,HIGH(1)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0xC4
+; 0000 019F {
+; 0000 01A0 SEG_A = 1;
+	RCALL SUBOPT_0x20
+; 0000 01A1 SEG_B = 0;
+; 0000 01A2 SEG_C = 0;
+; 0000 01A3 SEG_D = 1;
+; 0000 01A4 SEG_E = 1;
+	SBI  0x5,0
+; 0000 01A5 SEG_F = 1;
+	SBI  0x5,1
+; 0000 01A6 SEG_G = 1;
+	SBI  0x5,2
+; 0000 01A7 }
+; 0000 01A8 else if (num == 2)
+	RJMP _0xD3
+_0xC4:
+	LDI  R30,LOW(2)
+	LDI  R31,HIGH(2)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0xD4
+; 0000 01A9 {
+; 0000 01AA SEG_A = 0;
+	CBI  0xB,4
+; 0000 01AB SEG_B = 0;
+	CBI  0xB,5
+; 0000 01AC SEG_C = 1;
+	SBI  0xB,6
+; 0000 01AD SEG_D = 0;
+	CBI  0xB,7
+; 0000 01AE SEG_E = 0;
+	CBI  0x5,0
+; 0000 01AF SEG_F = 1;
+	SBI  0x5,1
+; 0000 01B0 SEG_G = 0;
+	RJMP _0x180
+; 0000 01B1 }
+; 0000 01B2 else if (num == 3)
+_0xD4:
+	LDI  R30,LOW(3)
+	LDI  R31,HIGH(3)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0xE4
+; 0000 01B3 {
+; 0000 01B4 SEG_A = 0;
+	RCALL SUBOPT_0x1F
+; 0000 01B5 SEG_B = 0;
+; 0000 01B6 SEG_C = 0;
+; 0000 01B7 SEG_D = 0;
+; 0000 01B8 SEG_E = 1;
+	SBI  0x5,0
+; 0000 01B9 SEG_F = 1;
+	SBI  0x5,1
+; 0000 01BA SEG_G = 0;
+	RJMP _0x180
+; 0000 01BB }
+; 0000 01BC else if (num == 4)
+_0xE4:
+	LDI  R30,LOW(4)
+	LDI  R31,HIGH(4)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0xF4
+; 0000 01BD {
+; 0000 01BE SEG_A = 1;
+	RCALL SUBOPT_0x20
+; 0000 01BF SEG_B = 0;
+; 0000 01C0 SEG_C = 0;
+; 0000 01C1 SEG_D = 1;
+; 0000 01C2 SEG_E = 1;
+	RJMP _0x181
+; 0000 01C3 SEG_F = 0;
+; 0000 01C4 SEG_G = 0;
+; 0000 01C5 }
+; 0000 01C6 else if (num == 5)
+_0xF4:
+	LDI  R30,LOW(5)
+	LDI  R31,HIGH(5)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0x104
+; 0000 01C7 {
+; 0000 01C8 SEG_A = 0;
+	CBI  0xB,4
+; 0000 01C9 SEG_B = 1;
+	SBI  0xB,5
+; 0000 01CA SEG_C = 0;
+	RJMP _0x182
+; 0000 01CB SEG_D = 0;
+; 0000 01CC SEG_E = 1;
+; 0000 01CD SEG_F = 0;
+; 0000 01CE SEG_G = 0;
+; 0000 01CF }
+; 0000 01D0 else if (num == 6)
+_0x104:
+	LDI  R30,LOW(6)
+	LDI  R31,HIGH(6)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0x114
+; 0000 01D1 {
+; 0000 01D2 SEG_A = 0;
+	CBI  0xB,4
+; 0000 01D3 SEG_B = 1;
+	SBI  0xB,5
+; 0000 01D4 SEG_C = 0;
+	CBI  0xB,6
+; 0000 01D5 SEG_D = 0;
+	CBI  0xB,7
+; 0000 01D6 SEG_E = 0;
+	CBI  0x5,0
+; 0000 01D7 SEG_F = 0;
+	RJMP _0x183
+; 0000 01D8 SEG_G = 0;
+; 0000 01D9 }
+; 0000 01DA else if (num == 7)
+_0x114:
+	LDI  R30,LOW(7)
+	LDI  R31,HIGH(7)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0x124
+; 0000 01DB {
+; 0000 01DC SEG_A = 0;
+	CBI  0xB,4
+; 0000 01DD SEG_B = 0;
+	CBI  0xB,5
+; 0000 01DE SEG_C = 0;
+	CBI  0xB,6
+; 0000 01DF SEG_D = 1;
+	SBI  0xB,7
+; 0000 01E0 SEG_E = 1;
+	SBI  0x5,0
+; 0000 01E1 SEG_F = 1;
+	SBI  0x5,1
+; 0000 01E2 SEG_G = 1;
+	SBI  0x5,2
+; 0000 01E3 }
+; 0000 01E4 else if (num == 8)
+	RJMP _0x133
+_0x124:
+	LDI  R30,LOW(8)
+	LDI  R31,HIGH(8)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0x134
+; 0000 01E5 {
+; 0000 01E6 SEG_A = 0;
+	RCALL SUBOPT_0x1F
+; 0000 01E7 SEG_B = 0;
+; 0000 01E8 SEG_C = 0;
+; 0000 01E9 SEG_D = 0;
+; 0000 01EA SEG_E = 0;
+	CBI  0x5,0
+; 0000 01EB SEG_F = 0;
+	RJMP _0x183
+; 0000 01EC SEG_G = 0;
+; 0000 01ED }
+; 0000 01EE else if (num == 9)
+_0x134:
+	LDI  R30,LOW(9)
+	LDI  R31,HIGH(9)
+	CP   R30,R16
+	CPC  R31,R17
+	BRNE _0x144
+; 0000 01EF {
+; 0000 01F0 SEG_A = 0;
+	CBI  0xB,4
+; 0000 01F1 SEG_B = 0;
+	CBI  0xB,5
+; 0000 01F2 SEG_C = 0;
+_0x182:
+	CBI  0xB,6
+; 0000 01F3 SEG_D = 0;
+	CBI  0xB,7
+; 0000 01F4 SEG_E = 1;
+_0x181:
+	SBI  0x5,0
+; 0000 01F5 SEG_F = 0;
+_0x183:
+	CBI  0x5,1
+; 0000 01F6 SEG_G = 0;
+_0x180:
+	CBI  0x5,2
+; 0000 01F7 }
+; 0000 01F8 }
+_0x144:
+_0x133:
+_0xD3:
+_0xC3:
+	LD   R16,Y+
+	LD   R17,Y+
+	RET
+; .FEND
+;void aturJam(void)
+; 0000 01FB {
+_aturJam:
+; .FSTART _aturJam
+; 0000 01FC #asm("sei")
+	SEI
+; 0000 01FD atur = 0;
+	LDI  R30,LOW(0)
+	STS  _atur,R30
+	STS  _atur+1,R30
+; 0000 01FE TIMSK1 &= ~(1 << OCIE1A);
+	RCALL SUBOPT_0x1E
+; 0000 01FF while (!(EIFR & (1 << INTF1)))
+_0x153:
+	SBIC 0x1C,1
+	RJMP _0x155
+; 0000 0200 { // menunggu sampai interrupt ditekan
+; 0000 0201 if (BUTTON_D == 1)
+	SBIS 0x9,3
+	RJMP _0x156
+; 0000 0202 {
+; 0000 0203 delay_ms(300);
+	RCALL SUBOPT_0x21
+; 0000 0204 if (geser == 0)
+	BRNE _0x157
+; 0000 0205 {
+; 0000 0206 seconds_jam++;
+	RCALL SUBOPT_0xF
+; 0000 0207 if (seconds_jam >= 60)
+	BRLT _0x158
+; 0000 0208 {
+; 0000 0209 seconds_jam = 0;
 	CLR  R3
 	CLR  R4
-; 0000 0262 aturJam();
-	RCALL _aturJam
-; 0000 0263 while (1)
-_0x172:
-; 0000 0264 {
-; 0000 0265 }
-	RJMP _0x172
-; 0000 0266 }
-_0x175:
+; 0000 020A }
+; 0000 020B }
+_0x158:
+; 0000 020C else
+	RJMP _0x159
+_0x157:
+; 0000 020D {
+; 0000 020E minutes_jam++;
+	LDI  R30,LOW(1)
+	LDI  R31,HIGH(1)
+	__ADDWRR 5,6,30,31
+; 0000 020F if (minutes_jam >= 60)
+	RCALL SUBOPT_0xA
+	BRLT _0x15A
+; 0000 0210 {
+; 0000 0211 minutes_jam = 0;
+	CLR  R5
+	CLR  R6
+; 0000 0212 }
+; 0000 0213 }
+_0x15A:
+_0x159:
+; 0000 0214 }
+; 0000 0215 else if (BUTTON_C == 1)
+	RJMP _0x15B
+_0x156:
+	SBIS 0x9,2
+	RJMP _0x15C
+; 0000 0216 {
+; 0000 0217 delay_ms(300);
+	RCALL SUBOPT_0x21
+; 0000 0218 if (geser == 0)
+	BRNE _0x15D
+; 0000 0219 {
+; 0000 021A seconds_jam--;
+	__GETW1R 3,4
+	SBIW R30,1
+	__PUTW1R 3,4
+	ADIW R30,1
+; 0000 021B if (seconds_jam <= -1)
+	LDI  R30,LOW(65535)
+	LDI  R31,HIGH(65535)
+	CP   R30,R3
+	CPC  R31,R4
+	BRLT _0x15E
+; 0000 021C {
+; 0000 021D seconds_jam = 59;
+	LDI  R30,LOW(59)
+	LDI  R31,HIGH(59)
+	__PUTW1R 3,4
+; 0000 021E }
+; 0000 021F }
+_0x15E:
+; 0000 0220 else
+	RJMP _0x15F
+_0x15D:
+; 0000 0221 {
+; 0000 0222 minutes_jam--;
+	__GETW1R 5,6
+	SBIW R30,1
+	__PUTW1R 5,6
+; 0000 0223 if (minutes_jam <= -1)
+	LDI  R30,LOW(65535)
+	LDI  R31,HIGH(65535)
+	CP   R30,R5
+	CPC  R31,R6
+	BRLT _0x160
+; 0000 0224 {
+; 0000 0225 minutes_jam = 59;
+	LDI  R30,LOW(59)
+	LDI  R31,HIGH(59)
+	__PUTW1R 5,6
+; 0000 0226 }
+; 0000 0227 }
+_0x160:
+_0x15F:
+; 0000 0228 }
+; 0000 0229 else if (BUTTON_B == 1)
+	RJMP _0x161
+_0x15C:
+	SBIS 0x9,1
+	RJMP _0x162
+; 0000 022A {
+; 0000 022B delay_ms(300);
+	RCALL SUBOPT_0x21
+; 0000 022C if (geser == 0)
+	BRNE _0x163
+; 0000 022D {
+; 0000 022E geser = 1;
+	LDI  R30,LOW(1)
+	LDI  R31,HIGH(1)
+	STS  _geser,R30
+	STS  _geser+1,R31
+; 0000 022F }
+; 0000 0230 else
+	RJMP _0x164
+_0x163:
+; 0000 0231 {
+; 0000 0232 geser = 0;
+	LDI  R30,LOW(0)
+	STS  _geser,R30
+	STS  _geser+1,R30
+; 0000 0233 }
+_0x164:
+; 0000 0234 }
+; 0000 0235 // Update Digit Values
+; 0000 0236 digits[0] = minutes_jam / 10;
+_0x162:
+_0x161:
+_0x15B:
+	RCALL SUBOPT_0xB
+	RCALL SUBOPT_0xC
+; 0000 0237 digits[1] = minutes_jam % 10;
+	RCALL SUBOPT_0xB
+	RCALL SUBOPT_0xD
+; 0000 0238 digits[2] = seconds_jam / 10;
+	RCALL SUBOPT_0xE
+; 0000 0239 digits[3] = seconds_jam % 10;
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RCALL SUBOPT_0x14
+; 0000 023A }
+	RJMP _0x153
+_0x155:
+; 0000 023B atur = 1;
+	RCALL SUBOPT_0x2
+; 0000 023C // Clear the external interrupt flag
+; 0000 023D EIFR &= (0 << INTF1);
+	RJMP _0x2000001
+; 0000 023E 
+; 0000 023F // Return from function
+; 0000 0240 return;
+; 0000 0241 }
+; .FEND
+;void stopWatch(void)
+; 0000 0244 {
+_stopWatch:
+; .FSTART _stopWatch
+; 0000 0245 #asm("sei")
+	SEI
+; 0000 0246 seconds_stopwatch = 0;
+	RCALL SUBOPT_0x22
+; 0000 0247 minutes_stopwatch = 0;
+; 0000 0248 start = 0;
+	RCALL SUBOPT_0x4
+; 0000 0249 
+; 0000 024A while (!(EIFR & (1 << INTF1)))
+_0x165:
+	SBIC 0x1C,1
+	RJMP _0x167
+; 0000 024B {                    // menunggu sampai interrupt ditekan
+; 0000 024C if (BUTTON_D == 1) // start
+	SBIS 0x9,3
+	RJMP _0x168
+; 0000 024D {
+; 0000 024E delay_ms(300);
+	RCALL SUBOPT_0x23
+; 0000 024F start = 1;
+; 0000 0250 }
+; 0000 0251 else if (BUTTON_C == 1) // pause
+	RJMP _0x169
+_0x168:
+	SBIS 0x9,2
+	RJMP _0x16A
+; 0000 0252 {
+; 0000 0253 delay_ms(300);
+	RCALL SUBOPT_0x24
+; 0000 0254 start = 0;
+; 0000 0255 }
+; 0000 0256 else if (BUTTON_B == 1)
+	RJMP _0x16B
+_0x16A:
+	SBIS 0x9,1
+	RJMP _0x16C
+; 0000 0257 { // pause and reset
+; 0000 0258 delay_ms(300);
+	RCALL SUBOPT_0x24
+; 0000 0259 start = 0;
+; 0000 025A seconds_stopwatch = 0;
+	RCALL SUBOPT_0x22
+; 0000 025B minutes_stopwatch = 0;
+; 0000 025C }
+; 0000 025D // Update Digit Values
+; 0000 025E digits[0] = minutes_stopwatch / 10;
+_0x16C:
+_0x16B:
+_0x169:
+	RCALL SUBOPT_0x12
+	RCALL SUBOPT_0xC
+; 0000 025F digits[1] = minutes_stopwatch % 10;
+	RCALL SUBOPT_0x12
+	RCALL SUBOPT_0xD
+; 0000 0260 digits[2] = seconds_stopwatch / 10;
+	RCALL SUBOPT_0x13
+; 0000 0261 digits[3] = seconds_stopwatch % 10;
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RCALL SUBOPT_0x14
+; 0000 0262 }
+	RJMP _0x165
+_0x167:
+; 0000 0263 
+; 0000 0264 // Clear the external interrupt flag
+; 0000 0265 EIFR &= (0 << INTF1);
+	RJMP _0x2000001
+; 0000 0266 
+; 0000 0267 // Return from function
+; 0000 0268 return;
+; 0000 0269 }
+; .FEND
+;void alarmTimer(void)
+; 0000 026C {
+_alarmTimer:
+; .FSTART _alarmTimer
+; 0000 026D #asm("sei")
+	SEI
+; 0000 026E start = 0;
+	RCALL SUBOPT_0x4
+; 0000 026F seconds_timer = 0;
+	CLR  R7
+	CLR  R8
+; 0000 0270 minutes_timer = 0;
+	CLR  R9
+	CLR  R10
+; 0000 0271 while (!(EIFR & (1 << INTF1)))
+_0x16D:
+	SBIC 0x1C,1
+	RJMP _0x16F
+; 0000 0272 { // menunggu sampai interrupt ditekan
+; 0000 0273 if (BUTTON_D == 1)
+	SBIS 0x9,3
+	RJMP _0x170
+; 0000 0274 {
+; 0000 0275 delay_ms(300);
+	RCALL SUBOPT_0x25
+; 0000 0276 PIN_BUZZ = 0;
+; 0000 0277 seconds_timer++;
+	__ADDWRR 7,8,30,31
+; 0000 0278 if (seconds_timer >= 60)
+	LDI  R30,LOW(60)
+	LDI  R31,HIGH(60)
+	CP   R7,R30
+	CPC  R8,R31
+	BRLT _0x173
+; 0000 0279 {
+; 0000 027A seconds_timer = 0;
+	CLR  R7
+	CLR  R8
+; 0000 027B }
+; 0000 027C }
+_0x173:
+; 0000 027D else if (BUTTON_C == 1)
+	RJMP _0x174
+_0x170:
+	SBIS 0x9,2
 	RJMP _0x175
+; 0000 027E {
+; 0000 027F delay_ms(300);
+	RCALL SUBOPT_0x25
+; 0000 0280 PIN_BUZZ = 0;
+; 0000 0281 minutes_timer++;
+	__ADDWRR 9,10,30,31
+; 0000 0282 if (minutes_timer >= 60)
+	LDI  R30,LOW(60)
+	LDI  R31,HIGH(60)
+	CP   R9,R30
+	CPC  R10,R31
+	BRLT _0x178
+; 0000 0283 {
+; 0000 0284 minutes_timer = 0;
+	CLR  R9
+	CLR  R10
+; 0000 0285 }
+; 0000 0286 }
+_0x178:
+; 0000 0287 else if (BUTTON_B == 1)
+	RJMP _0x179
+_0x175:
+	SBIC 0x9,1
+; 0000 0288 {
+; 0000 0289 delay_ms(300);
+	RCALL SUBOPT_0x23
+; 0000 028A start = 1;
+; 0000 028B }
+; 0000 028C // Update Digit Values
+; 0000 028D digits[0] = minutes_timer / 10;
+_0x179:
+_0x174:
+	RCALL SUBOPT_0x10
+	RCALL SUBOPT_0xC
+; 0000 028E digits[1] = minutes_timer % 10;
+	RCALL SUBOPT_0x10
+	RCALL SUBOPT_0xD
+; 0000 028F digits[2] = seconds_timer / 10;
+	RCALL SUBOPT_0x11
+; 0000 0290 digits[3] = seconds_timer % 10;
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RCALL SUBOPT_0x14
+; 0000 0291 }
+	RJMP _0x16D
+_0x16F:
+; 0000 0292 // Clear the external interrupt flag
+; 0000 0293 EIFR &= (0 << INTF1);
+	RJMP _0x2000001
+; 0000 0294 
+; 0000 0295 // Return from function
+; 0000 0296 return;
+; 0000 0297 }
+; .FEND
+;void tampilanJam(void)
+; 0000 029A {
+_tampilanJam:
+; .FSTART _tampilanJam
+; 0000 029B #asm("sei")
+	SEI
+; 0000 029C 
+; 0000 029D while (!(EIFR & (1 << INTF1)))
+_0x17B:
+	SBIS 0x1C,1
+; 0000 029E { // menunggu sampai interrupt ditekan
+; 0000 029F }
+	RJMP _0x17B
+; 0000 02A0 
+; 0000 02A1 // Clear the external interrupt flag
+; 0000 02A2 EIFR &= (0 << INTF1);
+_0x2000001:
+	IN   R30,0x1C
+	ANDI R30,LOW(0x0)
+	OUT  0x1C,R30
+; 0000 02A3 
+; 0000 02A4 // Return from function
+; 0000 02A5 return;
+	RET
+; 0000 02A6 }
 ; .FEND
 
 	.DSEG
-_minutes_stopwatch:
-	.BYTE 0x2
 _digits:
 	.BYTE 0x8
 _digit_index:
@@ -2968,170 +2994,14 @@ _atur:
 	.BYTE 0x2
 _geser:
 	.BYTE 0x2
+_mode:
+	.BYTE 0x2
 _start:
 	.BYTE 0x2
 
 	.CSEG
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0x0:
-	CBI  0x5,0
-	CBI  0xB,6
-	CBI  0xB,7
-	CBI  0x5,1
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1:
-	SBI  0x5,0
-	CBI  0xB,6
-	CBI  0xB,7
-	SBI  0x5,1
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 9 TIMES, CODE SIZE REDUCTION:30 WORDS
-SUBOPT_0x2:
-	LDS  R30,111
-	ANDI R30,0xFD
-	STS  111,R30
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:12 WORDS
-SUBOPT_0x3:
-	LDI  R26,LOW(300)
-	LDI  R27,HIGH(300)
-	RCALL _delay_ms
-	LDS  R30,_geser
-	LDS  R31,_geser+1
-	SBIW R30,0
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x4:
-	LDI  R30,LOW(60)
-	LDI  R31,HIGH(60)
-	CP   R5,R30
-	CPC  R6,R31
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x5:
-	LDI  R30,LOW(1)
-	LDI  R31,HIGH(1)
-	__ADDWRR 7,8,30,31
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x6:
-	LDI  R30,LOW(60)
-	LDI  R31,HIGH(60)
-	CP   R7,R30
-	CPC  R8,R31
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x7:
-	__GETW2R 7,8
-	LDI  R30,LOW(10)
-	LDI  R31,HIGH(10)
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:18 WORDS
-SUBOPT_0x8:
-	RCALL __DIVW21
-	STS  _digits,R30
-	STS  _digits+1,R31
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:18 WORDS
-SUBOPT_0x9:
-	RCALL __MODW21
-	__PUTW1MN _digits,2
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0xA:
-	__GETW2R 5,6
-	LDI  R30,LOW(10)
-	LDI  R31,HIGH(10)
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:18 WORDS
-SUBOPT_0xB:
-	RCALL __DIVW21
-	__PUTW1MN _digits,4
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:10 WORDS
-SUBOPT_0xC:
-	RCALL __MODW21
-	__PUTW1MN _digits,6
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:13 WORDS
-SUBOPT_0xD:
-	LDI  R30,LOW(1)
-	LDI  R31,HIGH(1)
-	STS  _atur,R30
-	STS  _atur+1,R31
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0xE:
-	CLR  R13
-	CLR  R14
-	LDI  R30,LOW(0)
-	STS  _minutes_stopwatch,R30
-	STS  _minutes_stopwatch+1,R30
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:5 WORDS
-SUBOPT_0xF:
-	LDI  R26,LOW(300)
-	LDI  R27,HIGH(300)
-	RCALL _delay_ms
-	LDS  R30,111
-	ORI  R30,2
-	STS  111,R30
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x10:
-	LDI  R26,LOW(300)
-	LDI  R27,HIGH(300)
-	RCALL _delay_ms
-	RJMP SUBOPT_0x2
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:13 WORDS
-SUBOPT_0x11:
-	LDS  R26,_minutes_stopwatch
-	LDS  R27,_minutes_stopwatch+1
-	LDI  R30,LOW(10)
-	LDI  R31,HIGH(10)
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0x12:
-	__GETW2R 13,14
-	LDI  R30,LOW(10)
-	LDI  R31,HIGH(10)
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x13:
-	__GETW2R 11,12
-	LDI  R30,LOW(10)
-	LDI  R31,HIGH(10)
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0x14:
-	__GETW2R 9,10
-	LDI  R30,LOW(10)
-	LDI  R31,HIGH(10)
-	RET
-
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:10 WORDS
-SUBOPT_0x15:
+SUBOPT_0x0:
 	ST   -Y,R0
 	ST   -Y,R1
 	ST   -Y,R15
@@ -3147,102 +3017,294 @@ SUBOPT_0x15:
 	ST   -Y,R30
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x16:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:13 WORDS
+SUBOPT_0x1:
+	LDS  R26,_mode
+	LDS  R27,_mode+1
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:13 WORDS
+SUBOPT_0x2:
 	LDI  R30,LOW(1)
 	LDI  R31,HIGH(1)
-	CP   R30,R3
-	CPC  R31,R4
+	STS  _atur,R30
+	STS  _atur+1,R31
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x17:
-	LDI  R30,LOW(2)
-	LDI  R31,HIGH(2)
-	CP   R30,R3
-	CPC  R31,R4
+SUBOPT_0x3:
+	STS  _mode,R30
+	STS  _mode+1,R31
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:6 WORDS
-SUBOPT_0x18:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:22 WORDS
+SUBOPT_0x4:
+	LDI  R30,LOW(0)
+	STS  _start,R30
+	STS  _start+1,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
+SUBOPT_0x5:
+	LDS  R30,_mode
+	LDS  R31,_mode+1
+	SBIW R30,0
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:8 WORDS
+SUBOPT_0x6:
+	LDI  R30,LOW(1)
+	LDI  R31,HIGH(1)
+	STS  _start,R30
+	STS  _start+1,R31
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
+SUBOPT_0x7:
+	LDI  R30,LOW(0)
+	STS  _mode,R30
+	STS  _mode+1,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:12 WORDS
+SUBOPT_0x8:
+	LDI  R30,LOW(1)
+	LDI  R31,HIGH(1)
+	__ADDWRR 3,4,30,31
+	LDI  R30,LOW(60)
+	LDI  R31,HIGH(60)
+	CP   R3,R30
+	CPC  R4,R31
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:13 WORDS
+SUBOPT_0x9:
+	CLR  R3
+	CLR  R4
 	LDI  R30,LOW(1)
 	LDI  R31,HIGH(1)
 	__ADDWRR 5,6,30,31
-	RJMP SUBOPT_0x4
+	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
-SUBOPT_0x19:
-	LD   R30,X+
-	LD   R31,X+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:10 WORDS
+SUBOPT_0xA:
+	LDI  R30,LOW(60)
+	LDI  R31,HIGH(60)
+	CP   R5,R30
+	CPC  R6,R31
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
+SUBOPT_0xB:
+	__GETW2R 5,6
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 8 TIMES, CODE SIZE REDUCTION:26 WORDS
+SUBOPT_0xC:
+	RCALL __DIVW21
+	STS  _digits,R30
+	STS  _digits+1,R31
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 8 TIMES, CODE SIZE REDUCTION:26 WORDS
+SUBOPT_0xD:
+	RCALL __MODW21
+	__PUTW1MN _digits,2
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:8 WORDS
+SUBOPT_0xE:
+	__GETW2R 3,4
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RCALL __DIVW21
+	__PUTW1MN _digits,4
+	__GETW2R 3,4
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:7 WORDS
+SUBOPT_0xF:
+	__GETW1R 3,4
 	ADIW R30,1
-	ST   -X,R31
-	ST   -X,R30
+	__PUTW1R 3,4
+	SBIW R30,1
+	LDI  R30,LOW(60)
+	LDI  R31,HIGH(60)
+	CP   R3,R30
+	CPC  R4,R31
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:13 WORDS
+SUBOPT_0x10:
+	__GETW2R 9,10
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:18 WORDS
+SUBOPT_0x11:
+	__GETW2R 7,8
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RCALL __DIVW21
+	__PUTW1MN _digits,4
+	__GETW2R 7,8
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:13 WORDS
+SUBOPT_0x12:
+	__GETW2R 13,14
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:18 WORDS
+SUBOPT_0x13:
+	__GETW2R 11,12
+	LDI  R30,LOW(10)
+	LDI  R31,HIGH(10)
+	RCALL __DIVW21
+	__PUTW1MN _digits,4
+	__GETW2R 11,12
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:14 WORDS
+SUBOPT_0x14:
+	RCALL __MODW21
+	__PUTW1MN _digits,6
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1A:
+SUBOPT_0x15:
 	LDS  R30,_digit_index
 	LDS  R31,_digit_index+1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1B:
-	SBI  0x5,5
-	CBI  0x5,3
-	CBI  0x5,4
-	CBI  0x5,2
+SUBOPT_0x16:
+	SBI  0x5,4
+	CBI  0x5,5
+	CBI  0x8,0
+	CBI  0x8,1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 12 TIMES, CODE SIZE REDUCTION:31 WORDS
-SUBOPT_0x1C:
+SUBOPT_0x17:
 	LDS  R26,_digit_index
 	LDS  R27,_digit_index+1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1D:
-	CBI  0x5,5
-	SBI  0x5,3
+SUBOPT_0x18:
 	CBI  0x5,4
-	CBI  0x5,2
+	SBI  0x5,5
+	CBI  0x8,0
+	CBI  0x8,1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1E:
+SUBOPT_0x19:
+	CBI  0x5,4
 	CBI  0x5,5
-	CBI  0x5,3
-	SBI  0x5,4
-	CBI  0x5,2
+	SBI  0x8,0
+	CBI  0x8,1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1F:
-	CBI  0x5,5
-	CBI  0x5,3
+SUBOPT_0x1A:
 	CBI  0x5,4
-	SBI  0x5,2
+	CBI  0x5,5
+	CBI  0x8,0
+	SBI  0x8,1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:10 WORDS
-SUBOPT_0x20:
+SUBOPT_0x1B:
 	LDS  R26,_geser
 	LDS  R27,_geser+1
 	SBIW R26,1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x21:
-	CBI  0x5,5
-	CBI  0x5,3
+SUBOPT_0x1C:
 	CBI  0x5,4
-	CBI  0x5,2
+	CBI  0x5,5
+	CBI  0x8,0
+	CBI  0x8,1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:10 WORDS
-SUBOPT_0x22:
+SUBOPT_0x1D:
 	LDS  R26,_geser
 	LDS  R27,_geser+1
 	SBIW R26,0
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
+SUBOPT_0x1E:
+	LDS  R30,111
+	ANDI R30,0xFD
+	STS  111,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
+SUBOPT_0x1F:
+	CBI  0xB,4
+	CBI  0xB,5
+	CBI  0xB,6
+	CBI  0xB,7
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x20:
+	SBI  0xB,4
+	CBI  0xB,5
+	CBI  0xB,6
+	SBI  0xB,7
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:12 WORDS
+SUBOPT_0x21:
+	LDI  R26,LOW(300)
+	LDI  R27,HIGH(300)
+	RCALL _delay_ms
+	LDS  R30,_geser
+	LDS  R31,_geser+1
+	SBIW R30,0
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x22:
+	CLR  R11
+	CLR  R12
+	CLR  R13
+	CLR  R14
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x23:
+	LDI  R26,LOW(300)
+	LDI  R27,HIGH(300)
+	RCALL _delay_ms
+	RJMP SUBOPT_0x6
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x24:
+	LDI  R26,LOW(300)
+	LDI  R27,HIGH(300)
+	RCALL _delay_ms
+	RJMP SUBOPT_0x4
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x25:
+	LDI  R26,LOW(300)
+	LDI  R27,HIGH(300)
+	RCALL _delay_ms
+	CBI  0x8,2
+	LDI  R30,LOW(1)
+	LDI  R31,HIGH(1)
 	RET
 
 ;RUNTIME LIBRARY
