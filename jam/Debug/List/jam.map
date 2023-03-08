@@ -25,15 +25,15 @@ minutes_stopwatch                                                               
 FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
-ext_int1_isr                                                                      0x00075     37
-timera_compa_isr                                                                  0x0009A    163
-timer0_ovf_isr                                                                    0x0013D    130
-main                                                                              0x001BF     45
-init_int1                                                                         0x001EC     21
-init_int2                                                                         0x00201      8
-init_buttonA                                                                      0x00209      6
-SevenSegment                                                                      0x0020F    104
-aturJam                                                                           0x00277     89
-stopWatch                                                                         0x002D0     27
-alarmTimer                                                                        0x002EB     46
-tampilanJam                                                                       0x00319      7
+ext_int1_isr                                                                      0x00075     49
+timera_compa_isr                                                                  0x000A6    163
+timer0_ovf_isr                                                                    0x00149    130
+main                                                                              0x001CB     50
+init_int1                                                                         0x001FD     21
+init_int2                                                                         0x00212      8
+init_buttonA                                                                      0x0021A      6
+SevenSegment                                                                      0x00220    104
+aturJam                                                                           0x00288     97
+stopWatch                                                                         0x002E9     27
+alarmTimer                                                                        0x00304     46
+tampilanJam                                                                       0x00332      7

@@ -21,6 +21,7 @@ Tugas EL3014 Sistem Mikroprosesor
     //   0 : menampilkan jam seperti biasa
     //   1 : mode stopwatch
     //   2 : mode timer
+    //   3 : mode atur jam
     // }
     // atur : integer { 1 : menggilir seven segment, 0 : pindah digit saat tombol ditekan }
     // geser : integer { }
@@ -56,24 +57,23 @@ void tampilanJam(void);
 // DEKLARASI VARIABEL
 
 // Mendefinisikan pin seven segment, button, dan buzzer
-#define DIGIT_1 PORTB.4
-#define DIGIT_2 PORTB.5
-#define DIGIT_3 PORTC.0
-#define DIGIT_4 PORTC.1
-#define SEG_A PORTD.4
-#define SEG_B PORTD.5
-#define SEG_C PORTD.6
-#define SEG_D PORTD.7
-#define SEG_E PORTB.0
-#define SEG_F PORTB.1
-#define SEG_G PORTB.2
-#define SEG_DP PORTB.3
-#define BUTTON_A PIND.0
-#define BUTTON_B PIND.1
-#define BUTTON_C PIND.2
-#define BUTTON_D PIND.3
-#define PIN_BUZZ PORTC.2
-
+#define DIGIT_1 PORTB.5
+#define DIGIT_2 PORTB.3
+#define DIGIT_3 PORTB.4
+#define DIGIT_4 PORTB.2
+#define SEG_A PORTB.0
+#define SEG_B PORTD.6
+#define SEG_C PORTD.7
+#define SEG_D PORTB.1
+#define SEG_E PORTC.1
+#define SEG_F PORTD.4
+#define SEG_G PORTC.0
+#define SEG_DP PORTD.5
+#define BUTTON_A PIND.3
+#define BUTTON_B PINC.5
+#define BUTTON_C PINC.4
+#define BUTTON_D PINC.3
+#define PIN_BUZZ PORTD.2
 
 // Mendefinisikan variabel waktu yang akan ditampilkan pada seven segment
 int seconds_jam = 0;
@@ -101,7 +101,7 @@ interrupt[EXT_INT1] void ext_int1_isr(void)
   delay_ms(300);
   
   // mode tampilan
-  else if (mode == 0)
+  if (mode == 0)
   {
     atur = 1;
     mode = 1;
@@ -111,7 +111,7 @@ interrupt[EXT_INT1] void ext_int1_isr(void)
   }
 
   // mode stopwatch
-  if (mode == 1)
+  else if (mode == 1)
   {
     atur = 1;
     mode = 2;
@@ -123,9 +123,17 @@ interrupt[EXT_INT1] void ext_int1_isr(void)
   else if (mode == 2)
   {
     atur = 1;
-    mode = 0;
+    mode = 3;
     start = 0; 
     alarmTimer();
+  }
+  
+  else if (mode == 3)
+  {
+    atur = 0;
+    mode = 0;
+    start = 0; 
+    aturJam();
   }
 }
 
@@ -161,7 +169,7 @@ interrupt[TIM1_COMPA] void timera_compa_isr(void)
     }
 
     // mengatur digit seven segment saat mode : timer
-    else if(mode == 0)
+    else if(mode == 3)
     {
       // satu detik berlalu
       seconds_timer--;
@@ -243,7 +251,7 @@ interrupt[TIM1_COMPA] void timera_compa_isr(void)
     }
   }
 
-  // saatnya waktu diam
+  // agar saat mode lain waktu tetap berjalan
   else
   {
     seconds_jam++;
@@ -548,7 +556,7 @@ void aturJam(void)
 {
 #asm("sei")
   atur = 0;
-  TIMSK1 &= ~(1 << OCIE1A);
+  start = 0;
   while (!(EIFR & (1 << INTF1)))
   { // menunggu sampai interrupt ditekan
     if (BUTTON_D == 1)
@@ -717,4 +725,3 @@ void tampilanJam(void)
   // Return from function
   return;
 }
-
